@@ -7,3 +7,10 @@ type Cohort struct {
 	Name    string
 	OwnerID uuid.UUID
 }
+
+type CohortWithUsers struct {
+	ID      uuid.UUID
+	Name    string
+	OwnerID uuid.UUID
+	Users   []User
+}
