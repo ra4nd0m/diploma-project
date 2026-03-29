@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"user-service/internal/models"
@@ -49,6 +50,21 @@ func (r *UserRepo) CreateUser(ctx context.Context, user *models.User) error {
 	_, err := r.db.ExecContext(ctx, query, user.ID, user.DisplayName, user.Preferences)
 	if err != nil {
 		return fmt.Errorf("insert user %w", err)
+	}
+
+	return nil
+}
+
+func (r *UserRepo) UpdateUserPreferences(ctx context.Context, id uuid.UUID, preferences json.RawMessage) error {
+	const query = `
+		UPDATE user
+		SET preferences = $2
+		WHERE id = $1
+	`
+
+	_, err := r.db.ExecContext(ctx, query, id, preferences)
+	if err != nil {
+		return fmt.Errorf("update user preferences %w", err)
 	}
 
 	return nil
