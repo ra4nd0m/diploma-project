@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run app",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/api",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env.local"
+        },
+        {
+            "name": "Debug test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${fileDirname}",
+            "envFile": "${workspaceFolder}/.env.local",
+            "args": [
+                "-v"
+            ]
+        }
+    ]
+}
