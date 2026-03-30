@@ -81,6 +81,49 @@ func (r *CohortRepo) GetCohortByOwnerID(ctx context.Context, ownerID uuid.UUID) 
 	return cohorts, nil
 }
 
+func (r *CohortRepo) GetCohortList(ctx context.Context) ([]*models.Cohort, error) {
+	const query = `
+		SELECT id, name, owner_id
+		FROM cohort
+		ORDER BY name
+	`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("query cohorts %w", err)
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			fmt.Printf("Error closing rows: %v\n", err)
+		}
+	}()
+
+	cohorts := make([]*models.Cohort, 0)
+
+	for rows.Next() {
+		var cohort models.Cohort
+
+		err := rows.Scan(
+			&cohort.ID,
+			&cohort.Name,
+			&cohort.OwnerID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan cohort %w", err)
+		}
+
+		cohorts = append(cohorts, &cohort)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate cohort rows %w", err)
+	}
+
+	return cohorts, nil
+
+}
+
 func (r *CohortRepo) GetCohortByID(ctx context.Context, id uuid.UUID) (*models.CohortWithUsers, bool, error) {
 	const query = `
 		SELECT c.id, c.name, c.owner_id, u.id, u.display_name
