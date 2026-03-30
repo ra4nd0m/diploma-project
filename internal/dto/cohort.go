@@ -18,3 +18,8 @@ type CohortCreateRequest struct {
 type CohortJoinRequest struct {
 	Token string `json:"token"`
 }
+
+type CohortIsOwnedRequest struct {
+	CohortID string `json:"cohort_id"`
+	UserID   string `json:"user_id"`
+}

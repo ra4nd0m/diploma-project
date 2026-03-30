@@ -80,3 +80,18 @@ func (s *CohortService) GenerateInviteTokenToCohort(ctx context.Context, cohortI
 	}
 	return token, nil
 }
+
+func (s *CohortService) IsCohortOwnedByUser(ctx context.Context, cohortID, userID uuid.UUID) (bool, error) {
+	cohorts, err := s.cohorts.GetCohortByOwnerID(ctx, userID)
+	if err != nil {
+		return false, fmt.Errorf("get cohorts by owner %w", err)
+	}
+
+	for _, cohort := range cohorts {
+		if cohort.ID == cohortID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
