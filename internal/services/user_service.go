@@ -43,3 +43,11 @@ func (s *UserService) GetOrCreateUser(ctx context.Context, id uuid.UUID) (*model
 		return newUser, nil
 	}
 }
+
+func (s *UserService) UpdateUserPreferences(ctx context.Context, id uuid.UUID, preferences json.RawMessage) error {
+	err := s.users.UpdateUserPreferences(ctx, id, preferences)
+	if err != nil {
+		return fmt.Errorf("update user preferences %w", err)
+	}
+	return nil
+}

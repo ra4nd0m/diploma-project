@@ -46,6 +46,11 @@ func NewAuthMiddleware(manager AccessTokenManager) func(next http.Handler) http.
 	}
 }
 
+func ClaimsFromContext(ctx context.Context) (*security.AccessClaims, bool) {
+	claims, ok := ctx.Value(accessClaimsKey).(*security.AccessClaims)
+	return claims, ok
+}
+
 func writeJSONError(w http.ResponseWriter, status int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
