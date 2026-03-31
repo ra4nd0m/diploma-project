@@ -2,6 +2,7 @@ using AuthService.Data;
 using AuthService.Routes;
 using AuthService.Models;
 using AuthService.Services;
+using AuthService.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,6 +28,8 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
 var app = builder.Build();
+
+await DatabaseInitializer.InitializeAsync(app);
 
 app.MapAuthRoutes();
 
