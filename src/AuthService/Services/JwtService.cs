@@ -32,23 +32,18 @@ public class JwtService(
         var signingCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
 
         var roles = await userManager.GetRolesAsync(user);
-        var isStudent = roles.Any(role => string.Equals(role, "Student", StringComparison.OrdinalIgnoreCase));
-        var isTeacher = roles.Any(role => string.Equals(role, "Teacher", StringComparison.OrdinalIgnoreCase));
 
         var email = user.Email ?? throw new InvalidOperationException("User email is not set");
 
+        var primaryRole = roles.FirstOrDefault() ?? string.Empty;
+
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, email),
-            new(ClaimTypes.NameIdentifier, user.Id),
-            new("IsStudent", isStudent.ToString()),
-            new("IsTeacher", isTeacher.ToString())
+            new("sub", user.Id),
+            new("role", primaryRole),
+            new("name", user.DisplayName ?? email),
+            new("email", email)
         };
-
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
 
         var token = new JwtSecurityToken(
             issuer: configuration["Jwt:Issuer"],
