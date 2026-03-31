@@ -23,6 +23,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 .AddTokenProvider<DataProtectorTokenProvider<User>>(TokenOptions.DefaultProvider);
 
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
 var app = builder.Build();
 

@@ -8,4 +8,5 @@ public class User : IdentityUser
     public required string SchoolName { get; set; }
     public int RoleId { get; set; }
     public Role Role { get; set; } = null!;
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }
