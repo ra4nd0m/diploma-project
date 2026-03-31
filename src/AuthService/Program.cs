@@ -1,4 +1,5 @@
 using AuthService.Data;
+using AuthService.Routes;
 using AuthService.Models;
 using AuthService.Services;
 using Microsoft.AspNetCore.Identity;
@@ -27,6 +28,6 @@ builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+app.MapAuthRoutes();
 
 app.Run();

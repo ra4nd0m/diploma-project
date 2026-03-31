@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AuthService.Models;
+using AuthService.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
@@ -14,7 +15,7 @@ public class JwtService(
 {
     public async Task<string> GenerateJwtToken(User user)
     {
-        logger.LogInformation("Generating JWT token for user {email}", ObfuscateEmail(user.Email));
+        logger.LogInformation("Generating JWT token for user {email}", EmailObfuscator.ObfuscateEmail(user.Email));
 
         var key = configuration["Jwt:Key"]
             ?? throw new InvalidOperationException("JWT key is not configured");
@@ -58,21 +59,5 @@ public class JwtService(
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    private static string ObfuscateEmail(string? email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            return "<empty>";
-        }
-
-        var atIndex = email.IndexOf('@');
-        if (atIndex <= 1)
-        {
-            return "***";
-        }
-
-        return $"{email[0]}***{email[(atIndex - 1)..]}";
     }
 }
