@@ -3,13 +3,13 @@ package models
 import "github.com/google/uuid"
 
 type Cohort struct {
-	ID      uuid.UUID
+	ID      int64
 	Name    string
 	OwnerID uuid.UUID
 }
 
 type CohortWithUsers struct {
-	ID      uuid.UUID
+	ID      int64
 	Name    string
 	OwnerID uuid.UUID
 	Users   []User

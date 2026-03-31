@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 	"user-service/internal/dto"
 	"user-service/internal/middleware"
@@ -16,10 +17,10 @@ import (
 type CohortService interface {
 	CreateCohort(ctx context.Context, name string, ownerID uuid.UUID) (*models.Cohort, error)
 	GetCohorts(ctx context.Context) ([]*models.Cohort, error)
-	GetCohortWithUsers(ctx context.Context, cohortID uuid.UUID) (*models.CohortWithUsers, error)
-	AddsUserToCohortByInvite(ctx context.Context, cohortID, userID uuid.UUID) error
-	GenerateInviteTokenToCohort(ctx context.Context, cohortID uuid.UUID) (string, error)
-	IsCohortOwnedByUser(ctx context.Context, cohortID, userID uuid.UUID) (bool, error)
+	GetCohortWithUsers(ctx context.Context, cohortID int64) (*models.CohortWithUsers, error)
+	AddsUserToCohortByInvite(ctx context.Context, cohortID int64, userID uuid.UUID) error
+	GenerateInviteTokenToCohort(ctx context.Context, cohortID int64) (string, error)
+	IsCohortOwnedByUser(ctx context.Context, cohortID int64, userID uuid.UUID) (bool, error)
 }
 
 type InviteTokenParser interface {
@@ -66,7 +67,7 @@ func (h *CohortHandler) CreateCohort(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := dto.CohortResponse{
-		ID:   cohort.ID.String(),
+		ID:   strconv.FormatInt(cohort.ID, 10),
 		Name: cohort.Name,
 	}
 
@@ -83,7 +84,7 @@ func (h *CohortHandler) GetCohorts(w http.ResponseWriter, r *http.Request) {
 	resp := make([]dto.CohortResponse, 0, len(cohorts))
 	for _, cohort := range cohorts {
 		resp = append(resp, dto.CohortResponse{
-			ID:   cohort.ID.String(),
+			ID:   strconv.FormatInt(cohort.ID, 10),
 			Name: cohort.Name,
 		})
 	}
@@ -92,7 +93,7 @@ func (h *CohortHandler) GetCohorts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CohortHandler) GetCohortMembers(w http.ResponseWriter, r *http.Request) {
-	cohortID, err := uuid.Parse(r.PathValue("id"))
+	cohortID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid cohort id")
 		return
@@ -119,7 +120,7 @@ func (h *CohortHandler) GetCohortMembers(w http.ResponseWriter, r *http.Request)
 	}
 
 	resp := dto.CohortWithUsersResponse{
-		ID:    cohort.ID.String(),
+		ID:    strconv.FormatInt(cohort.ID, 10),
 		Name:  cohort.Name,
 		Users: users,
 	}
@@ -161,7 +162,7 @@ func (h *CohortHandler) JoinCohort(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cohortID, err := uuid.Parse(inviteClaims.CohortID)
+	cohortID, err := strconv.ParseInt(inviteClaims.CohortID, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid invite token")
 		return
@@ -172,7 +173,7 @@ func (h *CohortHandler) JoinCohort(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{"cohort_id": cohortID.String()})
+	writeJSON(w, http.StatusOK, map[string]string{"cohort_id": strconv.FormatInt(cohortID, 10)})
 }
 
 func (h *CohortHandler) GenerateInviteToken(w http.ResponseWriter, r *http.Request) {
@@ -181,7 +182,7 @@ func (h *CohortHandler) GenerateInviteToken(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	cohortID, err := uuid.Parse(r.PathValue("id"))
+	cohortID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid cohort id")
 		return
@@ -207,7 +208,7 @@ func (h *CohortHandler) IsOwner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cohortID, err := uuid.Parse(req.CohortID)
+	cohortID, err := strconv.ParseInt(req.CohortID, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid cohort id")
 		return

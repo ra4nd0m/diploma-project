@@ -124,7 +124,7 @@ func (r *CohortRepo) GetCohortList(ctx context.Context) ([]*models.Cohort, error
 
 }
 
-func (r *CohortRepo) GetCohortByID(ctx context.Context, id uuid.UUID) (*models.CohortWithUsers, bool, error) {
+func (r *CohortRepo) GetCohortByID(ctx context.Context, id int64) (*models.CohortWithUsers, bool, error) {
 	const query = `
 		SELECT c.id, c.name, c.owner_id, u.id, u.display_name
 		FROM cohort c
@@ -149,7 +149,7 @@ func (r *CohortRepo) GetCohortByID(ctx context.Context, id uuid.UUID) (*models.C
 
 	for rows.Next() {
 		var (
-			cohortID    uuid.UUID
+			cohortID    int64
 			name        string
 			ownerID     uuid.UUID
 			userID      *uuid.UUID
@@ -199,7 +199,7 @@ func (r *CohortRepo) GetCohortByID(ctx context.Context, id uuid.UUID) (*models.C
 	return result, true, nil
 }
 
-func (r *CohortRepo) AddUserToCohort(ctx context.Context, cohortID, userID uuid.UUID) error {
+func (r *CohortRepo) AddUserToCohort(ctx context.Context, cohortID int64, userID uuid.UUID) error {
 	const query = `
 		INSERT INTO user_cohort (cohort_id, user_id)
 		VALUES ($1, $2)
@@ -214,7 +214,7 @@ func (r *CohortRepo) AddUserToCohort(ctx context.Context, cohortID, userID uuid.
 	return nil
 }
 
-func (r *CohortRepo) RemoveUserFromCohort(ctx context.Context, cohortID, userID uuid.UUID) error {
+func (r *CohortRepo) RemoveUserFromCohort(ctx context.Context, cohortID int64, userID uuid.UUID) error {
 	const query = `
 		DELETE FROM user_cohort
 		WHERE cohort_id = $1 AND user_id = $2

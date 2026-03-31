@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"user-service/internal/models"
 
 	"github.com/google/uuid"
@@ -11,8 +12,8 @@ import (
 type CohortRepo interface {
 	CreateCohort(ctx context.Context, name string, ownerID uuid.UUID) (*models.Cohort, error)
 	GetCohortByOwnerID(ctx context.Context, ownerID uuid.UUID) ([]*models.Cohort, error)
-	GetCohortByID(ctx context.Context, id uuid.UUID) (*models.CohortWithUsers, bool, error)
-	AddUserToCohort(ctx context.Context, cohortID, userID uuid.UUID) error
+	GetCohortByID(ctx context.Context, id int64) (*models.CohortWithUsers, bool, error)
+	AddUserToCohort(ctx context.Context, cohortID int64, userID uuid.UUID) error
 	GetCohortList(ctx context.Context) ([]*models.Cohort, error)
 }
 
@@ -50,7 +51,7 @@ func (s *CohortService) GetCohorts(ctx context.Context) ([]*models.Cohort, error
 	return cohorts, nil
 }
 
-func (s *CohortService) GetCohortWithUsers(ctx context.Context, cohortID uuid.UUID) (*models.CohortWithUsers, error) {
+func (s *CohortService) GetCohortWithUsers(ctx context.Context, cohortID int64) (*models.CohortWithUsers, error) {
 	cohort, found, err := s.cohorts.GetCohortByID(ctx, cohortID)
 	if err != nil {
 		return nil, fmt.Errorf("get cohort with users %w", err)
@@ -61,7 +62,7 @@ func (s *CohortService) GetCohortWithUsers(ctx context.Context, cohortID uuid.UU
 	return cohort, nil
 }
 
-func (s *CohortService) AddsUserToCohortByInvite(ctx context.Context, cohortID, userID uuid.UUID) error {
+func (s *CohortService) AddsUserToCohortByInvite(ctx context.Context, cohortID int64, userID uuid.UUID) error {
 	user, err := s.users.GetOrCreateUser(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("get or create user %w", err)
@@ -73,15 +74,15 @@ func (s *CohortService) AddsUserToCohortByInvite(ctx context.Context, cohortID, 
 	return nil
 }
 
-func (s *CohortService) GenerateInviteTokenToCohort(ctx context.Context, cohortID uuid.UUID) (string, error) {
-	token, err := s.tokenManager.GenerateInviteToken(cohortID.String())
+func (s *CohortService) GenerateInviteTokenToCohort(ctx context.Context, cohortID int64) (string, error) {
+	token, err := s.tokenManager.GenerateInviteToken(strconv.FormatInt(cohortID, 10))
 	if err != nil {
 		return "", fmt.Errorf("generate invite token %w", err)
 	}
 	return token, nil
 }
 
-func (s *CohortService) IsCohortOwnedByUser(ctx context.Context, cohortID, userID uuid.UUID) (bool, error) {
+func (s *CohortService) IsCohortOwnedByUser(ctx context.Context, cohortID int64, userID uuid.UUID) (bool, error) {
 	cohorts, err := s.cohorts.GetCohortByOwnerID(ctx, userID)
 	if err != nil {
 		return false, fmt.Errorf("get cohorts by owner %w", err)

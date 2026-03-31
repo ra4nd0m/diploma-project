@@ -8,6 +8,6 @@ import (
 
 type UserCohort struct {
 	UserID   uuid.UUID `db:"user_id"`
-	CohortID uuid.UUID `db:"cohort_id"`
+	CohortID int64     `db:"cohort_id"`
 	JoinedOn time.Time `db:"joined_on"`
 }
