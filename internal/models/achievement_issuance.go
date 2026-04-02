@@ -7,11 +7,11 @@ import (
 )
 
 type AchievementIssuance struct {
-	ID                int64
-	AchievementID     int64
-	RecipientID       uuid.UUID
-	IssuerID          uuid.UUID
-	StatusID          int64
-	AddditionalDetail string
-	ProgressPayload   json.RawMessage
+	ID               int64
+	AchievementID    int64
+	RecipientID      uuid.UUID
+	IssuerID         uuid.UUID
+	StatusID         int64
+	AdditionalDetail *string
+	ProgressPayload  json.RawMessage
 }
