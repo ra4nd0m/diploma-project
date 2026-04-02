@@ -10,4 +10,8 @@ var (
 	ErrConditionTypeNotFound = errors.New("condition type not found")
 	ErrInvalidCondition      = errors.New("invalid condition")
 	ErrNotFound              = errors.New("not found")
+	ErrAchievementNotFound   = errors.New("achievement not found")
+	ErrStatusNotFound        = errors.New("achievement status not found")
+	ErrAlreadyIssued         = errors.New("achievement already issued to recipient")
+	ErrInvalidIssuanceKind   = errors.New("invalid issuance kind")
 )
