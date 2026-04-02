@@ -11,12 +11,6 @@ import (
 )
 
 const (
-	IssuanceKindManual = "manual"
-
-	ConditionTypeAllOf = "all_of"
-
-	StatusIssued     = "issued"
-	StatusInProgress = "in_progress"
 )
 
 type repo interface {
@@ -102,7 +96,7 @@ func (s *Service) ensureManualIssuance(ctx context.Context, issuanceKindID int64
 	if kind == nil {
 		return services.ErrIssuanceKindNotFound
 	}
-	if kind.Code != IssuanceKindManual {
+	if kind.Code != models.IssuanceKindManual {
 		return services.ErrForbidden
 	}
 	return nil
@@ -115,7 +109,7 @@ func (s *Service) createDirectIssuance(
 	issuerID uuid.UUID,
 	additionalDetail *string,
 ) (int64, error) {
-	status, err := s.repo.GetAchievementStatusByCode(ctx, StatusIssued)
+	status, err := s.repo.GetAchievementStatusByCode(ctx, models.AchievementStatusIssued)
 	if err != nil {
 		return 0, fmt.Errorf("get issued status: %w", err)
 	}
@@ -143,7 +137,7 @@ func (s *Service) syncDependentProgress(
 	recipientID uuid.UUID,
 	issuerID uuid.UUID,
 ) error {
-	inProgressStatus, err := s.repo.GetAchievementStatusByCode(ctx, StatusInProgress)
+	inProgressStatus, err := s.repo.GetAchievementStatusByCode(ctx, models.AchievementStatusInProgress)
 	if err != nil {
 		return fmt.Errorf("get in-progress status: %w", err)
 	}
@@ -176,9 +170,9 @@ func (s *Service) advanceExistingDependents(
 
 		nextRemaining, completed := patchRemainingIDs(payload.RemainingIDs, completedAchievementID)
 
-		nextStatusCode := StatusInProgress
+		nextStatusCode := models.AchievementStatusInProgress
 		if completed {
-			nextStatusCode = StatusIssued
+			nextStatusCode = models.AchievementStatusIssued
 		}
 
 		nextStatus, err := s.repo.GetAchievementStatusByCode(ctx, nextStatusCode)
@@ -226,10 +220,6 @@ func (s *Service) bootstrapDependents(
 			continue
 		}
 
-		if dependent.ConditionTypeID == 0 {
-			continue
-		}
-
 		conditionType, err := s.repo.GetConditionTypeByID(ctx, dependent.ConditionTypeID)
 		if err != nil {
 			return fmt.Errorf("get condition type: %w", err)
@@ -237,11 +227,8 @@ func (s *Service) bootstrapDependents(
 		if conditionType == nil {
 			return services.ErrConditionTypeNotFound
 		}
-		if conditionType.Code != ConditionTypeAllOf {
-			continue
-		}
 
-		allOfPayload, err := parseAllOfPayload(dependent.ConditionPayload)
+		allOfPayload, err := parseConditionPayload(conditionType.Code, dependent.ConditionPayload)
 		if err != nil {
 			return err
 		}
@@ -275,6 +262,15 @@ func (s *Service) bootstrapDependents(
 	}
 
 	return nil
+}
+
+func parseConditionPayload(conditionTypeCode string, raw json.RawMessage) (*AllOfConditionPayload, error) {
+	switch conditionTypeCode {
+	case models.ConditionTypeAllOf:
+		return parseAllOfPayload(raw)
+	default:
+		return nil, services.ErrConditionTypeNotFound
+	}
 }
 
 func parseAllOfPayload(raw json.RawMessage) (*AllOfConditionPayload, error) {

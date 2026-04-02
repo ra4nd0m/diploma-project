@@ -40,7 +40,7 @@ func (s *AchievementCreationService) CreateAchievement(ctx context.Context, inpu
 		return 0, services.ErrInvalidInput
 	}
 
-	accessMode, err := s.repo.GetAccessModeByCode(ctx, "cohort")
+	accessMode, err := s.repo.GetAccessModeByCode(ctx, models.AccessModeCohort)
 	if err != nil {
 		return 0, fmt.Errorf("access mode by code: %w", err)
 	}
@@ -88,7 +88,7 @@ func (s *AchievementCreationService) CreateAchievement(ctx context.Context, inpu
 
 func validateCondition(conditionType string, raw json.RawMessage) (json.RawMessage, error) {
 	switch conditionType {
-	case "all_of":
+	case models.ConditionTypeAllOf:
 		var payload AllOfConditionPayload
 		if err := json.Unmarshal(raw, &payload); err != nil {
 			return nil, services.ErrInvalidCondition
