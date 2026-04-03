@@ -10,8 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const (
-)
+const ()
 
 type repo interface {
 	GetAchievement(ctx context.Context, achievementID int64) (*models.Achievement, error)
@@ -23,7 +22,7 @@ type repo interface {
 
 	IssueAchievement(ctx context.Context, issuance models.AchievementIssuance) (int64, error)
 
-	FindDependentsByStatus(ctx context.Context, recipientID uuid.UUID, cohortID int64, statusID int64) ([]*models.AchievementIssuance, error)
+	FindDependentsByStatus(ctx context.Context, recipientID uuid.UUID, cohortID, statusID, dependencyAchievementID int64) ([]*models.AchievementIssuance, error)
 	FindDependentAchievements(ctx context.Context, dependencyAchievementID int64, cohortID int64) ([]*models.Achievement, error)
 
 	UpdateIssuanceProgress(ctx context.Context, issuanceID int64, statusID int64, progressPayload []byte) error
@@ -145,7 +144,7 @@ func (s *Service) syncDependentProgress(
 		return services.ErrStatusNotFound
 	}
 
-	inProgressRows, err := s.repo.FindDependentsByStatus(ctx, recipientID, issuedAchievement.CohortID, inProgressStatus.ID)
+	inProgressRows, err := s.repo.FindDependentsByStatus(ctx, recipientID, issuedAchievement.CohortID, inProgressStatus.ID, issuedAchievement.ID)
 	if err != nil {
 		return fmt.Errorf("find in-progress dependents: %w", err)
 	}
