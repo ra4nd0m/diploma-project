@@ -55,7 +55,7 @@ func main() {
 	userHandler := handlers.NewUserHandler(userService)
 	cohortHandler := handlers.NewCohortHandler(cohortService, inviteTokenManager)
 
-	router := routes.NewRouter(logger, accessTokenManager, cohortHandler, userHandler)
+	router := routes.NewRouter(logger, accessTokenManager, cohortHandler, userHandler, cfg.InternalToken)
 	server := &http.Server{
 		Addr:    cfg.HTTPAddr,
 		Handler: router,

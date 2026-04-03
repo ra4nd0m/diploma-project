@@ -59,3 +59,22 @@ func writeJSONError(w http.ResponseWriter, status int, message string) {
 		Errors: message,
 	})
 }
+
+func NewInternalTokenMiddleware(expectedToken string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token := r.Header.Get("X-Internal-Token")
+			if token == "" {
+				writeJSONError(w, http.StatusUnauthorized, "missing X-Internal-Token header")
+				return
+			}
+
+			if token != expectedToken {
+				writeJSONError(w, http.StatusUnauthorized, "invalid X-Internal-Token")
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}

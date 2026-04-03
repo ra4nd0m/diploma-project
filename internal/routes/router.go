@@ -16,6 +16,7 @@ func NewRouter(
 	authManager authmiddleware.AccessTokenManager,
 	cohortHandler *handlers.CohortHandler,
 	userHandler *handlers.UserHandler,
+	internalToken string,
 ) http.Handler {
 	r := chi.NewRouter()
 
@@ -25,6 +26,7 @@ func NewRouter(
 	r.Use(requestLogger(logger))
 
 	auth := authmiddleware.NewAuthMiddleware(authManager)
+	internalTokenValidator := authmiddleware.NewInternalTokenMiddleware(internalToken)
 
 	r.Group(func(protected chi.Router) {
 		protected.Use(auth)
@@ -36,7 +38,11 @@ func NewRouter(
 		protected.Get("/cohorts/{id}/members", cohortHandler.GetCohortMembers)
 		protected.Post("/cohorts/join", cohortHandler.JoinCohort)
 		protected.Post("/cohorts/{id}/invite", cohortHandler.GenerateInviteToken)
-		protected.Post("/is-owner", cohortHandler.IsOwner)
+	})
+
+	r.Group(func(internal chi.Router) {
+		internal.Use(internalTokenValidator)
+		internal.Post("/internal/cohorts/can-edit", cohortHandler.IsOwner)
 	})
 
 	return r
