@@ -15,7 +15,7 @@ func NewLookupRepo(db *sql.DB) *LookupRepo {
 }
 
 func (r *LookupRepo) GetAccessModeByCode(ctx context.Context, code string) (*models.AccessMode, error) {
-	const query = `SELECT id, code, "name" FROM access_modes WHERE code = $1`
+	const query = `SELECT id, code, "name" FROM access_mode WHERE code = $1`
 	var accessMode models.AccessMode
 	if err := r.db.QueryRowContext(ctx, query, code).Scan(&accessMode.ID, &accessMode.Code, &accessMode.Name); err != nil {
 		if err == sql.ErrNoRows {
@@ -27,7 +27,7 @@ func (r *LookupRepo) GetAccessModeByCode(ctx context.Context, code string) (*mod
 }
 
 func (r *LookupRepo) GetAccessModeByID(ctx context.Context, id int64) (*models.AccessMode, error) {
-	const query = `SELECT id, code, "name" FROM access_modes WHERE id = $1`
+	const query = `SELECT id, code, "name" FROM access_mode WHERE id = $1`
 	var accessMode models.AccessMode
 	if err := r.db.QueryRowContext(ctx, query, id).Scan(&accessMode.ID, &accessMode.Code, &accessMode.Name); err != nil {
 		if err == sql.ErrNoRows {
@@ -39,7 +39,7 @@ func (r *LookupRepo) GetAccessModeByID(ctx context.Context, id int64) (*models.A
 }
 
 func (r *LookupRepo) GetIssuanceKindByCode(ctx context.Context, code string) (*models.IssuanceKind, error) {
-	const query = `SELECT id, code, "name" FROM issuance_kinds WHERE code = $1`
+	const query = `SELECT id, code, "name" FROM issuance_kind WHERE code = $1`
 	var issuanceKind models.IssuanceKind
 	if err := r.db.QueryRowContext(ctx, query, code).Scan(&issuanceKind.ID, &issuanceKind.Code, &issuanceKind.Name); err != nil {
 		if err == sql.ErrNoRows {
@@ -51,7 +51,7 @@ func (r *LookupRepo) GetIssuanceKindByCode(ctx context.Context, code string) (*m
 }
 
 func (r *LookupRepo) GetIssuanceKindByID(ctx context.Context, id int64) (*models.IssuanceKind, error) {
-	const query = `SELECT id, code, "name" FROM issuance_kinds WHERE id = $1`
+	const query = `SELECT id, code, "name" FROM issuance_kind WHERE id = $1`
 	var issuanceKind models.IssuanceKind
 	if err := r.db.QueryRowContext(ctx, query, id).Scan(&issuanceKind.ID, &issuanceKind.Code, &issuanceKind.Name); err != nil {
 		if err == sql.ErrNoRows {
@@ -63,7 +63,7 @@ func (r *LookupRepo) GetIssuanceKindByID(ctx context.Context, id int64) (*models
 }
 
 func (r *LookupRepo) GetConditionTypeByCode(ctx context.Context, code string) (*models.ConditionType, error) {
-	const query = `SELECT id, code, "name" FROM condition_types WHERE code = $1`
+	const query = `SELECT id, code, "name" FROM condition_type WHERE code = $1`
 	var conditionType models.ConditionType
 	if err := r.db.QueryRowContext(ctx, query, code).Scan(&conditionType.ID, &conditionType.Code, &conditionType.Name); err != nil {
 		if err == sql.ErrNoRows {
@@ -75,7 +75,7 @@ func (r *LookupRepo) GetConditionTypeByCode(ctx context.Context, code string) (*
 }
 
 func (r *LookupRepo) GetConditionTypeByID(ctx context.Context, id int64) (*models.ConditionType, error) {
-	const query = `SELECT id, code, "name" FROM condition_types WHERE id = $1`
+	const query = `SELECT id, code, "name" FROM condition_type WHERE id = $1`
 	var conditionType models.ConditionType
 	if err := r.db.QueryRowContext(ctx, query, id).Scan(&conditionType.ID, &conditionType.Code, &conditionType.Name); err != nil {
 		if err == sql.ErrNoRows {
@@ -87,7 +87,7 @@ func (r *LookupRepo) GetConditionTypeByID(ctx context.Context, id int64) (*model
 }
 
 func (r *LookupRepo) GetAchievementStatusByCode(ctx context.Context, code string) (*models.AchievementStatus, error) {
-	const query = `SELECT id, code, "name" FROM achievement_statuses WHERE code = $1`
+	const query = `SELECT id, code, "name" FROM achievement_status WHERE code = $1`
 	var status models.AchievementStatus
 	if err := r.db.QueryRowContext(ctx, query, code).Scan(&status.ID, &status.Code, &status.Name); err != nil {
 		if err == sql.ErrNoRows {
