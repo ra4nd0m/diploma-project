@@ -20,13 +20,18 @@ type AchievementCreationLookupRepo interface {
 	GetConditionTypeByCode(ctx context.Context, code string) (*models.ConditionType, error)
 }
 
+type authz interface {
+	RequireCohortEditAccess(ctx context.Context, userID uuid.UUID, cohortID int64) error
+}
+
 type AchievementCreationService struct {
 	repo       AchievementCreationRepo
 	lookupRepo AchievementCreationLookupRepo
+	authz      authz
 }
 
-func NewAchievementCreationService(repo AchievementCreationRepo, lookupRepo AchievementCreationLookupRepo) *AchievementCreationService {
-	return &AchievementCreationService{repo: repo, lookupRepo: lookupRepo}
+func NewAchievementCreationService(repo AchievementCreationRepo, lookupRepo AchievementCreationLookupRepo, authz authz) *AchievementCreationService {
+	return &AchievementCreationService{repo: repo, lookupRepo: lookupRepo, authz: authz}
 }
 
 func (s *AchievementCreationService) CreateAchievement(ctx context.Context, input Input) (int64, error) {
@@ -41,6 +46,10 @@ func (s *AchievementCreationService) CreateAchievement(ctx context.Context, inpu
 	}
 	if input.IssuanceKind == "" {
 		return 0, services.ErrInvalidInput
+	}
+
+	if err := s.authz.RequireCohortEditAccess(ctx, input.OwnerID, input.CohortID); err != nil {
+		return 0, err
 	}
 
 	accessMode, err := s.lookupRepo.GetAccessModeByCode(ctx, models.AccessModeCohort)

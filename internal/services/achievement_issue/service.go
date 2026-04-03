@@ -33,14 +33,19 @@ type AchievementIssueLifecycleRepo interface {
 	UpdateIssuanceProgress(ctx context.Context, issuanceID int64, statusID int64, progressPayload []byte) error
 }
 
+type authz interface {
+	RequireCohortEditAccess(ctx context.Context, userID uuid.UUID, cohortID int64) error
+}
+
 type Service struct {
 	repo          AchievementIssueRepo
 	lookupRepo    AchievementIssueLookupRepo
 	lifecycleRepo AchievementIssueLifecycleRepo
+	authz         authz
 }
 
-func NewService(repo AchievementIssueRepo, lookupRepo AchievementIssueLookupRepo, lifecycleRepo AchievementIssueLifecycleRepo) *Service {
-	return &Service{repo: repo, lookupRepo: lookupRepo, lifecycleRepo: lifecycleRepo}
+func NewService(repo AchievementIssueRepo, lookupRepo AchievementIssueLookupRepo, lifecycleRepo AchievementIssueLifecycleRepo, authz authz) *Service {
+	return &Service{repo: repo, lookupRepo: lookupRepo, lifecycleRepo: lifecycleRepo, authz: authz}
 }
 
 func (s *Service) IssueAchievement(ctx context.Context, input Input) (*Output, error) {
@@ -52,6 +57,9 @@ func (s *Service) IssueAchievement(ctx context.Context, input Input) (*Output, e
 		return nil, err
 	}
 	// Here goes the authz check
+	if err := s.authz.RequireCohortEditAccess(ctx, input.IssuerID, achievement.CohortID); err != nil {
+		return nil, err
+	}
 
 	if err := s.ensureNotAlreadyIssued(ctx, achievement.ID, input.RecipientID); err != nil {
 		return nil, err
