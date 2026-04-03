@@ -23,7 +23,7 @@ type repo interface {
 	IssueAchievement(ctx context.Context, issuance models.AchievementIssuance) (int64, error)
 
 	FindDependentsByStatus(ctx context.Context, recipientID uuid.UUID, cohortID, statusID, dependencyAchievementID int64) ([]*models.AchievementIssuance, error)
-	FindDependentAchievements(ctx context.Context, dependencyAchievementID int64, cohortID int64) ([]*models.Achievement, error)
+	FindDependentAchievements(ctx context.Context, dependencyAchievementID int64, cohortID int64, conditionTypeCode string) ([]*models.Achievement, error)
 
 	UpdateIssuanceProgress(ctx context.Context, issuanceID int64, statusID int64, progressPayload []byte) error
 }
@@ -204,7 +204,7 @@ func (s *Service) bootstrapDependents(
 	issuerID uuid.UUID,
 	inProgressStatusID int64,
 ) error {
-	dependents, err := s.repo.FindDependentAchievements(ctx, issuedAchievement.ID, issuedAchievement.CohortID)
+	dependents, err := s.repo.FindDependentAchievements(ctx, issuedAchievement.ID, issuedAchievement.CohortID, models.ConditionTypeAllOf)
 	if err != nil {
 		return fmt.Errorf("find dependent achievements: %w", err)
 	}
