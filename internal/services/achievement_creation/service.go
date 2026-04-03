@@ -11,19 +11,22 @@ import (
 )
 
 type AchievementCreationRepo interface {
-	GetAccessModeByCode(ctx context.Context, code string) (*models.AccessMode, error)
-	GetIssuanceKindByCode(ctx context.Context, code string) (*models.IssuanceKind, error)
-	GetConditionTypeByCode(ctx context.Context, code string) (*models.ConditionType, error)
-
 	CreateAchievement(ctx context.Context, achievement models.Achievement) (int64, error)
 }
 
-type AchievementCreationService struct {
-	repo AchievementCreationRepo
+type AchievementCreationLookupRepo interface {
+	GetAccessModeByCode(ctx context.Context, code string) (*models.AccessMode, error)
+	GetIssuanceKindByCode(ctx context.Context, code string) (*models.IssuanceKind, error)
+	GetConditionTypeByCode(ctx context.Context, code string) (*models.ConditionType, error)
 }
 
-func NewAchievementCreationService(repo AchievementCreationRepo) *AchievementCreationService {
-	return &AchievementCreationService{repo: repo}
+type AchievementCreationService struct {
+	repo       AchievementCreationRepo
+	lookupRepo AchievementCreationLookupRepo
+}
+
+func NewAchievementCreationService(repo AchievementCreationRepo, lookupRepo AchievementCreationLookupRepo) *AchievementCreationService {
+	return &AchievementCreationService{repo: repo, lookupRepo: lookupRepo}
 }
 
 func (s *AchievementCreationService) CreateAchievement(ctx context.Context, input Input) (int64, error) {
@@ -40,12 +43,12 @@ func (s *AchievementCreationService) CreateAchievement(ctx context.Context, inpu
 		return 0, services.ErrInvalidInput
 	}
 
-	accessMode, err := s.repo.GetAccessModeByCode(ctx, models.AccessModeCohort)
+	accessMode, err := s.lookupRepo.GetAccessModeByCode(ctx, models.AccessModeCohort)
 	if err != nil {
 		return 0, fmt.Errorf("access mode by code: %w", err)
 	}
 
-	issuanceKind, err := s.repo.GetIssuanceKindByCode(ctx, input.IssuanceKind)
+	issuanceKind, err := s.lookupRepo.GetIssuanceKindByCode(ctx, input.IssuanceKind)
 	if err != nil {
 		return 0, fmt.Errorf("issuance kind by code: %w", err)
 	}
@@ -54,7 +57,7 @@ func (s *AchievementCreationService) CreateAchievement(ctx context.Context, inpu
 	var conditionPayload json.RawMessage
 
 	if input.ConditionType != nil {
-		conditionType, err := s.repo.GetConditionTypeByCode(ctx, *input.ConditionType)
+		conditionType, err := s.lookupRepo.GetConditionTypeByCode(ctx, *input.ConditionType)
 		if err != nil {
 			return 0, fmt.Errorf("condition type by code: %w", err)
 		}

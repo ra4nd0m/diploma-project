@@ -14,10 +14,15 @@ const ()
 
 type AchievementIssueRepo interface {
 	GetAchievement(ctx context.Context, achievementID int64) (*models.Achievement, error)
+}
+
+type AchievementIssueLookupRepo interface {
 	GetIssuanceKindByID(ctx context.Context, id int64) (*models.IssuanceKind, error)
 	GetConditionTypeByID(ctx context.Context, id int64) (*models.ConditionType, error)
 	GetAchievementStatusByCode(ctx context.Context, code string) (*models.AchievementStatus, error)
+}
 
+type AchievementIssueLifecycleRepo interface {
 	GetRecipientIssuance(ctx context.Context, achievementID int64, recipientID uuid.UUID) (*models.AchievementIssuance, error)
 
 	IssueAchievement(ctx context.Context, issuance models.AchievementIssuance) (int64, error)
@@ -29,11 +34,13 @@ type AchievementIssueRepo interface {
 }
 
 type Service struct {
-	repo AchievementIssueRepo
+	repo          AchievementIssueRepo
+	lookupRepo    AchievementIssueLookupRepo
+	lifecycleRepo AchievementIssueLifecycleRepo
 }
 
-func NewService(repo AchievementIssueRepo) *Service {
-	return &Service{repo: repo}
+func NewService(repo AchievementIssueRepo, lookupRepo AchievementIssueLookupRepo, lifecycleRepo AchievementIssueLifecycleRepo) *Service {
+	return &Service{repo: repo, lookupRepo: lookupRepo, lifecycleRepo: lifecycleRepo}
 }
 
 func (s *Service) IssueAchievement(ctx context.Context, input Input) (*Output, error) {
@@ -77,7 +84,7 @@ func (s *Service) mustGetAchievement(ctx context.Context, achievementID int64) (
 	return achievement, nil
 }
 func (s *Service) ensureNotAlreadyIssued(ctx context.Context, achievementID int64, recipientID uuid.UUID) error {
-	existing, err := s.repo.GetRecipientIssuance(ctx, achievementID, recipientID)
+	existing, err := s.lifecycleRepo.GetRecipientIssuance(ctx, achievementID, recipientID)
 	if err != nil {
 		return fmt.Errorf("get recipient issuance: %w", err)
 	}
@@ -88,7 +95,7 @@ func (s *Service) ensureNotAlreadyIssued(ctx context.Context, achievementID int6
 }
 
 func (s *Service) ensureManualIssuance(ctx context.Context, issuanceKindID int64) error {
-	kind, err := s.repo.GetIssuanceKindByID(ctx, issuanceKindID)
+	kind, err := s.lookupRepo.GetIssuanceKindByID(ctx, issuanceKindID)
 	if err != nil {
 		return fmt.Errorf("get issuance kind: %w", err)
 	}
@@ -108,7 +115,7 @@ func (s *Service) createDirectIssuance(
 	issuerID uuid.UUID,
 	additionalDetail *string,
 ) (int64, error) {
-	status, err := s.repo.GetAchievementStatusByCode(ctx, models.AchievementStatusIssued)
+	status, err := s.lookupRepo.GetAchievementStatusByCode(ctx, models.AchievementStatusIssued)
 	if err != nil {
 		return 0, fmt.Errorf("get issued status: %w", err)
 	}
@@ -116,7 +123,7 @@ func (s *Service) createDirectIssuance(
 		return 0, services.ErrStatusNotFound
 	}
 
-	id, err := s.repo.IssueAchievement(ctx, models.AchievementIssuance{
+	id, err := s.lifecycleRepo.IssueAchievement(ctx, models.AchievementIssuance{
 		AchievementID:    achievementID,
 		RecipientID:      recipientID,
 		IssuerID:         issuerID,
@@ -136,7 +143,7 @@ func (s *Service) syncDependentProgress(
 	recipientID uuid.UUID,
 	issuerID uuid.UUID,
 ) error {
-	inProgressStatus, err := s.repo.GetAchievementStatusByCode(ctx, models.AchievementStatusInProgress)
+	inProgressStatus, err := s.lookupRepo.GetAchievementStatusByCode(ctx, models.AchievementStatusInProgress)
 	if err != nil {
 		return fmt.Errorf("get in-progress status: %w", err)
 	}
@@ -144,7 +151,7 @@ func (s *Service) syncDependentProgress(
 		return services.ErrStatusNotFound
 	}
 
-	inProgressRows, err := s.repo.FindDependentsByStatus(ctx, recipientID, issuedAchievement.CohortID, inProgressStatus.ID, issuedAchievement.ID)
+	inProgressRows, err := s.lifecycleRepo.FindDependentsByStatus(ctx, recipientID, issuedAchievement.CohortID, inProgressStatus.ID, issuedAchievement.ID)
 	if err != nil {
 		return fmt.Errorf("find in-progress dependents: %w", err)
 	}
@@ -174,7 +181,7 @@ func (s *Service) advanceExistingDependents(
 			nextStatusCode = models.AchievementStatusIssued
 		}
 
-		nextStatus, err := s.repo.GetAchievementStatusByCode(ctx, nextStatusCode)
+		nextStatus, err := s.lookupRepo.GetAchievementStatusByCode(ctx, nextStatusCode)
 		if err != nil {
 			return fmt.Errorf("get next status: %w", err)
 		}
@@ -189,7 +196,7 @@ func (s *Service) advanceExistingDependents(
 			return err
 		}
 
-		if err := s.repo.UpdateIssuanceProgress(ctx, row.ID, nextStatus.ID, nextPayload); err != nil {
+		if err := s.lifecycleRepo.UpdateIssuanceProgress(ctx, row.ID, nextStatus.ID, nextPayload); err != nil {
 			return fmt.Errorf("update issuance progress: %w", err)
 		}
 	}
@@ -211,7 +218,7 @@ func (s *Service) bootstrapDependents(
 
 	for _, dependent := range dependents {
 		// Safety: skip if recipient already has this parent achievement.
-		existing, err := s.repo.GetRecipientIssuance(ctx, dependent.ID, recipientID)
+		existing, err := s.lifecycleRepo.GetRecipientIssuance(ctx, dependent.ID, recipientID)
 		if err != nil {
 			return fmt.Errorf("get dependent recipient issuance: %w", err)
 		}
@@ -219,7 +226,7 @@ func (s *Service) bootstrapDependents(
 			continue
 		}
 
-		conditionType, err := s.repo.GetConditionTypeByID(ctx, dependent.ConditionTypeID)
+		conditionType, err := s.lookupRepo.GetConditionTypeByID(ctx, dependent.ConditionTypeID)
 		if err != nil {
 			return fmt.Errorf("get condition type: %w", err)
 		}
@@ -248,7 +255,7 @@ func (s *Service) bootstrapDependents(
 			return err
 		}
 
-		_, err = s.repo.IssueAchievement(ctx, models.AchievementIssuance{
+		_, err = s.lifecycleRepo.IssueAchievement(ctx, models.AchievementIssuance{
 			AchievementID:   dependent.ID,
 			RecipientID:     recipientID,
 			IssuerID:        issuerID,
@@ -272,7 +279,7 @@ func (s *Service) findDependentsByType(ctx context.Context, issuedAchievement *m
 	for _, dependentType := range dependentTypes {
 		switch dependentType {
 		case models.ConditionTypeAllOf:
-			rows, err := s.repo.FindDependentAchievements(ctx, issuedAchievement.ID, issuedAchievement.CohortID, dependentType)
+			rows, err := s.lifecycleRepo.FindDependentAchievements(ctx, issuedAchievement.ID, issuedAchievement.CohortID, dependentType)
 			if err != nil {
 				return nil, fmt.Errorf("find dependent achievements for type %s: %w", dependentType, err)
 			}

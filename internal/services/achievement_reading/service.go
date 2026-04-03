@@ -12,17 +12,21 @@ import (
 type AchievementReadingRepo interface {
 	GetAchievement(ctx context.Context, achievementID int64) (*models.Achievement, error)
 	GetAchievements(ctx context.Context, userID uuid.UUID) ([]*models.Achievement, error)
+}
+
+type AchievementReadingLookupRepo interface {
 	GetAccessModeByID(ctx context.Context, id int64) (*models.AccessMode, error)
 	GetIssuanceKindByID(ctx context.Context, id int64) (*models.IssuanceKind, error)
 	GetConditionTypeByID(ctx context.Context, id int64) (*models.ConditionType, error)
 }
 
 type AchievementReadingService struct {
-	repo AchievementReadingRepo
+	repo       AchievementReadingRepo
+	lookupRepo AchievementReadingLookupRepo
 }
 
-func NewAchievementReadingService(repo AchievementReadingRepo) *AchievementReadingService {
-	return &AchievementReadingService{repo: repo}
+func NewAchievementReadingService(repo AchievementReadingRepo, lookupRepo AchievementReadingLookupRepo) *AchievementReadingService {
+	return &AchievementReadingService{repo: repo, lookupRepo: lookupRepo}
 }
 
 func (s *AchievementReadingService) GetAchievement(ctx context.Context, achievementID int64) (*Output, error) {
@@ -70,7 +74,7 @@ func (s *AchievementReadingService) assembleAndVerifyAchievements(ctx context.Co
 			continue
 		}
 
-		accessMode, err := s.repo.GetAccessModeByID(ctx, achievement.AccessModeID)
+		accessMode, err := s.lookupRepo.GetAccessModeByID(ctx, achievement.AccessModeID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get access mode: %w", err)
 		}
@@ -78,7 +82,7 @@ func (s *AchievementReadingService) assembleAndVerifyAchievements(ctx context.Co
 			return nil, services.ErrAccessModeNotFound
 		}
 
-		issuanceKind, err := s.repo.GetIssuanceKindByID(ctx, achievement.IssuanceKindID)
+		issuanceKind, err := s.lookupRepo.GetIssuanceKindByID(ctx, achievement.IssuanceKindID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get issuance kind: %w", err)
 		}
@@ -89,7 +93,7 @@ func (s *AchievementReadingService) assembleAndVerifyAchievements(ctx context.Co
 		var conditionTypeOutput *LookupValue
 
 		if achievement.ConditionTypeID > 0 {
-			conditionType, err := s.repo.GetConditionTypeByID(ctx, achievement.ConditionTypeID)
+			conditionType, err := s.lookupRepo.GetConditionTypeByID(ctx, achievement.ConditionTypeID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get condition type: %w", err)
 			}
