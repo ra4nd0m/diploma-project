@@ -11,6 +11,7 @@ type Config struct {
 	DatabaseURL string
 	JWTSecret   string
 	JWTTTL      time.Duration
+	JWTIssuer   string
 	LogLevel    string
 	LogFormat   string
 }
@@ -26,6 +27,7 @@ func Load() (Config, error) {
 		DatabaseURL: getEnv("DATABASE_URL", "postgresql://user:password@localhost/db"),
 		JWTSecret:   getEnv("JWT_SECRET", "secret"),
 		JWTTTL:      ttl,
+		JWTIssuer:   getEnv("JWT_ISSUER", "achievement-service"),
 		LogLevel:    getEnv("LOG_LEVEL", "info"),
 		LogFormat:   getEnv("LOG_FORMAT", "text"),
 	}
