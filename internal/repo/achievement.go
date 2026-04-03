@@ -4,6 +4,7 @@ import (
 	"achievement-service/internal/models"
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -39,7 +40,7 @@ func (r *AchievementRepo) GetAchievement(ctx context.Context, achievementID int6
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("get achievement by id %d: %w", achievementID, err)
 	}
 
 	return achievement, nil
@@ -65,7 +66,7 @@ func (r *AchievementRepo) GetAchievements(ctx context.Context, userID uuid.UUID)
 
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get achievements by owner %s: %w", userID, err)
 	}
 	defer func() {
 		_ = rows.Close()
@@ -75,13 +76,13 @@ func (r *AchievementRepo) GetAchievements(ctx context.Context, userID uuid.UUID)
 	for rows.Next() {
 		achievement, err := scanAchievement(rows)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("scan achievements by owner %s: %w", userID, err)
 		}
 		achievements = append(achievements, achievement)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("iterate achievements by owner %s: %w", userID, err)
 	}
 
 	return achievements, nil
@@ -129,7 +130,7 @@ func (r *AchievementRepo) CreateAchievement(ctx context.Context, achievement mod
 		conditionPayload,
 	).Scan(&id)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("create achievement: %w", err)
 	}
 
 	return id, nil
@@ -153,7 +154,7 @@ func scanAchievement(scanner interface{ Scan(dest ...any) error }) (*models.Achi
 		&conditionPayload,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("scan achievement: %w", err)
 	}
 
 	if conditionType.Valid {
@@ -164,5 +165,49 @@ func scanAchievement(scanner interface{ Scan(dest ...any) error }) (*models.Achi
 	}
 
 	return &achievement, nil
+}
 
+func (r *AchievementRepo) FindDependentAchievements(ctx context.Context, dependencyAchievementID, cohortID int64) ([]*models.Achievement, error) {
+	const query = `
+		SELECT DISTINCT
+			a.id,
+			a.name,
+			a.description,
+			a.icon_link,
+			a.owner_id,
+			a.cohort_id,
+			a.access_mode,
+			a.issuance_kind,
+			a.condition_type,
+			a.condition_payload
+		FROM achievement a
+		JOIN condition_type ct ON ct.id = a.condition_type
+		CROSS JOIN jsonb_array_elements(a.condition_payload->'achievement_ids') AS dep(id_str)
+		WHERE a.cohort_id = $1
+			AND ct.code = $2
+			AND a.condition_payload IS NOT NULL
+			AND dep.id_str::bigint = $3
+	`
+	rows, err := r.db.QueryContext(ctx, query, cohortID, models.ConditionTypeAllOf, dependencyAchievementID)
+	if err != nil {
+		return nil, fmt.Errorf("find dependent achievements for dependency %d in cohort %d: %w", dependencyAchievementID, cohortID, err)
+	}
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	achievements := make([]*models.Achievement, 0)
+	for rows.Next() {
+		achievement, err := scanAchievement(rows)
+		if err != nil {
+			return nil, fmt.Errorf("scan dependent achievements for dependency %d in cohort %d: %w", dependencyAchievementID, cohortID, err)
+		}
+		achievements = append(achievements, achievement)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate dependent achievements for dependency %d in cohort %d: %w", dependencyAchievementID, cohortID, err)
+	}
+
+	return achievements, nil
 }
