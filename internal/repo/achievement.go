@@ -4,6 +4,8 @@ import (
 	"achievement-service/internal/models"
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type AchievementRepo struct {
@@ -43,7 +45,7 @@ func (r *AchievementRepo) GetAchievement(ctx context.Context, achievementID int6
 	return achievement, nil
 }
 
-func (r *AchievementRepo) GetAchievements(ctx context.Context, userID int64) ([]*models.Achievement, error) {
+func (r *AchievementRepo) GetAchievements(ctx context.Context, userID uuid.UUID) ([]*models.Achievement, error) {
 	const query = `
 		SELECT
 			id,
@@ -57,7 +59,7 @@ func (r *AchievementRepo) GetAchievements(ctx context.Context, userID int64) ([]
 			condition_type,
 			condition_payload
 		FROM achievement
-		WHERE cohort_id = $1
+		WHERE owner_id = $1
 		ORDER BY id DESC
 	`
 

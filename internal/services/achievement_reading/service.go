@@ -5,11 +5,13 @@ import (
 	"achievement-service/internal/services"
 	"context"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 type achievementReadingRepo interface {
 	GetAchievement(ctx context.Context, achievementID int64) (*models.Achievement, error)
-	GetAchievements(ctx context.Context, userID int64) ([]*models.Achievement, error)
+	GetAchievements(ctx context.Context, userID uuid.UUID) ([]*models.Achievement, error)
 	GetAccessModeByID(ctx context.Context, id int64) (*models.AccessMode, error)
 	GetIssuanceKindByID(ctx context.Context, id int64) (*models.IssuanceKind, error)
 	GetConditionTypeByID(ctx context.Context, id int64) (*models.ConditionType, error)
@@ -46,8 +48,8 @@ func (s *AchievementReadingService) GetAchievement(ctx context.Context, achievem
 	return outputs[0], nil
 }
 
-func (s *AchievementReadingService) GetAchievements(ctx context.Context, userID int64) ([]*Output, error) {
-	if userID <= 0 {
+func (s *AchievementReadingService) GetAchievements(ctx context.Context, userID uuid.UUID) ([]*Output, error) {
+	if userID == uuid.Nil {
 		return nil, services.ErrInvalidInput
 	}
 
