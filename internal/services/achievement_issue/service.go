@@ -12,7 +12,7 @@ import (
 
 const ()
 
-type repo interface {
+type AchievementIssueRepo interface {
 	GetAchievement(ctx context.Context, achievementID int64) (*models.Achievement, error)
 	GetIssuanceKindByID(ctx context.Context, id int64) (*models.IssuanceKind, error)
 	GetConditionTypeByID(ctx context.Context, id int64) (*models.ConditionType, error)
@@ -29,10 +29,10 @@ type repo interface {
 }
 
 type Service struct {
-	repo repo
+	repo AchievementIssueRepo
 }
 
-func NewService(repo repo) *Service {
+func NewService(repo AchievementIssueRepo) *Service {
 	return &Service{repo: repo}
 }
 

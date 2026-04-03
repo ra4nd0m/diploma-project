@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type achievementReadingRepo interface {
+type AchievementReadingRepo interface {
 	GetAchievement(ctx context.Context, achievementID int64) (*models.Achievement, error)
 	GetAchievements(ctx context.Context, userID uuid.UUID) ([]*models.Achievement, error)
 	GetAccessModeByID(ctx context.Context, id int64) (*models.AccessMode, error)
@@ -18,10 +18,10 @@ type achievementReadingRepo interface {
 }
 
 type AchievementReadingService struct {
-	repo achievementReadingRepo
+	repo AchievementReadingRepo
 }
 
-func NewAchievementReadingService(repo achievementReadingRepo) *AchievementReadingService {
+func NewAchievementReadingService(repo AchievementReadingRepo) *AchievementReadingService {
 	return &AchievementReadingService{repo: repo}
 }
 

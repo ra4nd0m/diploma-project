@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type achievementCreationRepo interface {
+type AchievementCreationRepo interface {
 	GetAccessModeByCode(ctx context.Context, code string) (*models.AccessMode, error)
 	GetIssuanceKindByCode(ctx context.Context, code string) (*models.IssuanceKind, error)
 	GetConditionTypeByCode(ctx context.Context, code string) (*models.ConditionType, error)
@@ -19,10 +19,10 @@ type achievementCreationRepo interface {
 }
 
 type AchievementCreationService struct {
-	repo achievementCreationRepo
+	repo AchievementCreationRepo
 }
 
-func NewAchievementCreationService(repo achievementCreationRepo) *AchievementCreationService {
+func NewAchievementCreationService(repo AchievementCreationRepo) *AchievementCreationService {
 	return &AchievementCreationService{repo: repo}
 }
 
