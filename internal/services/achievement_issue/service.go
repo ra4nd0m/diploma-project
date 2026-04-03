@@ -204,7 +204,7 @@ func (s *Service) bootstrapDependents(
 	issuerID uuid.UUID,
 	inProgressStatusID int64,
 ) error {
-	dependents, err := s.repo.FindDependentAchievements(ctx, issuedAchievement.ID, issuedAchievement.CohortID, models.ConditionTypeAllOf)
+	dependents, err := s.findDependentsByType(ctx, issuedAchievement)
 	if err != nil {
 		return fmt.Errorf("find dependent achievements: %w", err)
 	}
@@ -261,6 +261,28 @@ func (s *Service) bootstrapDependents(
 	}
 
 	return nil
+}
+
+func (s *Service) findDependentsByType(ctx context.Context, issuedAchievement *models.Achievement) ([]*models.Achievement, error) {
+	dependentTypes := []string{
+		models.ConditionTypeAllOf,
+	}
+
+	dependents := make([]*models.Achievement, 0)
+	for _, dependentType := range dependentTypes {
+		switch dependentType {
+		case models.ConditionTypeAllOf:
+			rows, err := s.repo.FindDependentAchievements(ctx, issuedAchievement.ID, issuedAchievement.CohortID, dependentType)
+			if err != nil {
+				return nil, fmt.Errorf("find dependent achievements for type %s: %w", dependentType, err)
+			}
+			dependents = append(dependents, rows...)
+		default:
+			continue
+		}
+	}
+
+	return dependents, nil
 }
 
 func parseConditionPayload(conditionTypeCode string, raw json.RawMessage) (*AllOfConditionPayload, error) {
