@@ -181,6 +181,11 @@ func (h *CohortHandler) JoinCohort(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strings.EqualFold(claims.Role, teacherRole) {
+		writeError(w, http.StatusForbidden, "forbidden: teachers cannot join cohorts")
+		return
+	}
+
 	userID, err := uuid.Parse(claims.Sub)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid user id")
@@ -223,14 +228,32 @@ func (h *CohortHandler) JoinCohort(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CohortHandler) GenerateInviteToken(w http.ResponseWriter, r *http.Request) {
-	if _, ok := middleware.ClaimsFromContext(r.Context()); !ok {
+	claims, ok := middleware.ClaimsFromContext(r.Context())
+	if !ok {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	userID, err := uuid.Parse(claims.Sub)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user id")
 		return
 	}
 
 	cohortID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid cohort id")
+		return
+	}
+
+	isOwner, err := h.cohortService.IsCohortOwnedByUser(r.Context(), cohortID, userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to check ownership")
+		return
+	}
+
+	if !isOwner {
+		writeError(w, http.StatusForbidden, "forbidden: only cohort owner can generate invite token")
 		return
 	}
 
