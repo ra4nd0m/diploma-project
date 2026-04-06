@@ -14,6 +14,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const teacherRole = "teacher"
+
 type CohortService interface {
 	CreateCohort(ctx context.Context, name string, ownerID uuid.UUID) (*models.Cohort, error)
 	GetCohorts(ctx context.Context) ([]*models.Cohort, error)
@@ -40,6 +42,11 @@ func (h *CohortHandler) CreateCohort(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if !strings.EqualFold(claims.Role, teacherRole) {
+		writeError(w, http.StatusForbidden, "forbidden: teacher role required")
 		return
 	}
 
