@@ -14,7 +14,7 @@ type CohortRepo interface {
 	GetCohortByOwnerID(ctx context.Context, ownerID uuid.UUID) ([]*models.Cohort, error)
 	GetCohortByID(ctx context.Context, id int64) (*models.CohortWithUsers, bool, error)
 	AddUserToCohort(ctx context.Context, cohortID int64, userID uuid.UUID) error
-	GetCohortList(ctx context.Context) ([]*models.Cohort, error)
+	GetCohortListByUser(ctx context.Context, userID uuid.UUID) ([]*models.Cohort, error)
 }
 
 type InviteTokenManager interface {
@@ -43,8 +43,8 @@ func (s *CohortService) CreateCohort(ctx context.Context, name string, ownerID u
 	return cohort, nil
 }
 
-func (s *CohortService) GetCohorts(ctx context.Context) ([]*models.Cohort, error) {
-	cohorts, err := s.cohorts.GetCohortList(ctx)
+func (s *CohortService) GetCohorts(ctx context.Context, userID uuid.UUID) ([]*models.Cohort, error) {
+	cohorts, err := s.cohorts.GetCohortListByUser(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get cohorts %w", err)
 	}

@@ -18,7 +18,7 @@ const teacherRole = "teacher"
 
 type CohortService interface {
 	CreateCohort(ctx context.Context, name string, ownerID uuid.UUID) (*models.Cohort, error)
-	GetCohorts(ctx context.Context) ([]*models.Cohort, error)
+	GetCohorts(ctx context.Context, userID uuid.UUID) ([]*models.Cohort, error)
 	GetCohortWithUsers(ctx context.Context, cohortID int64) (*models.CohortWithUsers, error)
 	AddsUserToCohortByInvite(ctx context.Context, cohortID int64, userID uuid.UUID) error
 	GenerateInviteTokenToCohort(ctx context.Context, cohortID int64) (string, error)
@@ -82,7 +82,19 @@ func (h *CohortHandler) CreateCohort(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CohortHandler) GetCohorts(w http.ResponseWriter, r *http.Request) {
-	cohorts, err := h.cohortService.GetCohorts(r.Context())
+	claims, ok := middleware.ClaimsFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	userID, err := uuid.Parse(claims.Sub)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user id")
+		return
+	}
+
+	cohorts, err := h.cohortService.GetCohorts(r.Context(), userID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to get cohorts")
 		return

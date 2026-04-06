@@ -81,14 +81,20 @@ func (r *CohortRepo) GetCohortByOwnerID(ctx context.Context, ownerID uuid.UUID) 
 	return cohorts, nil
 }
 
-func (r *CohortRepo) GetCohortList(ctx context.Context) ([]*models.Cohort, error) {
+func (r *CohortRepo) GetCohortListByUser(ctx context.Context, userID uuid.UUID) ([]*models.Cohort, error) {
 	const query = `
 		SELECT id, name, owner_id
 		FROM cohort
+			WHERE owner_id = $1 OR EXISTS (
+				SELECT 1
+				FROM user_cohort uc
+				WHERE uc.cohort_id = cohort.id
+				  AND uc.user_id = $1
+			)
 		ORDER BY name
 	`
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query cohorts %w", err)
 	}
