@@ -112,6 +112,18 @@ func (h *CohortHandler) GetCohorts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CohortHandler) GetCohortMembers(w http.ResponseWriter, r *http.Request) {
+	claims, ok := middleware.ClaimsFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	userID, err := uuid.Parse(claims.Sub)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user id")
+		return
+	}
+
 	cohortID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid cohort id")
@@ -126,6 +138,21 @@ func (h *CohortHandler) GetCohortMembers(w http.ResponseWriter, r *http.Request)
 		}
 
 		writeError(w, http.StatusInternalServerError, "failed to get cohort")
+		return
+	}
+
+	canView := cohort.OwnerID == userID
+	if !canView {
+		for _, member := range cohort.Users {
+			if member.ID == userID {
+				canView = true
+				break
+			}
+		}
+	}
+
+	if !canView {
+		writeError(w, http.StatusForbidden, "forbidden")
 		return
 	}
 
