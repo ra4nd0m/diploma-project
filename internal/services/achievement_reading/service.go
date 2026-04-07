@@ -40,10 +40,15 @@ type AchievementReadingLookupRepo interface {
 type AchievementReadingService struct {
 	repo       AchievementReadingRepo
 	lookupRepo AchievementReadingLookupRepo
+	authz      authz
 }
 
-func NewAchievementReadingService(repo AchievementReadingRepo, lookupRepo AchievementReadingLookupRepo) *AchievementReadingService {
-	return &AchievementReadingService{repo: repo, lookupRepo: lookupRepo}
+type authz interface {
+	RequireUserInCohorts(ctx context.Context, userID uuid.UUID, cohortIDs []int64) ([]int64, error)
+}
+
+func NewAchievementReadingService(repo AchievementReadingRepo, lookupRepo AchievementReadingLookupRepo, authz authz) *AchievementReadingService {
+	return &AchievementReadingService{repo: repo, lookupRepo: lookupRepo, authz: authz}
 }
 
 func (s *AchievementReadingService) GetVisibleAchievements(ctx context.Context, userID uuid.UUID, cohortIDs []int64) ([]*Output, error) {
@@ -51,12 +56,17 @@ func (s *AchievementReadingService) GetVisibleAchievements(ctx context.Context, 
 		return nil, services.ErrInvalidInput
 	}
 
+	validatedCohortIDs, err := s.authz.RequireUserInCohorts(ctx, userID, cohortIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	publicModeID, cohortModeID, privateModeID, err := s.getVisibilityAccessModeIDs(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	achievements, err := s.repo.ListVisibleAchievements(ctx, userID, cohortIDs, publicModeID, cohortModeID, privateModeID)
+	achievements, err := s.repo.ListVisibleAchievements(ctx, userID, validatedCohortIDs, publicModeID, cohortModeID, privateModeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get visible achievements: %w", err)
 	}
@@ -69,7 +79,12 @@ func (s *AchievementReadingService) GetOwnedAchievements(ctx context.Context, ow
 		return nil, services.ErrInvalidInput
 	}
 
-	achievements, err := s.repo.GetAchievementsByOwner(ctx, ownerID, cohortIDs)
+	validatedCohortIDs, err := s.authz.RequireUserInCohorts(ctx, ownerID, cohortIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	achievements, err := s.repo.GetAchievementsByOwner(ctx, ownerID, validatedCohortIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get owner achievements: %w", err)
 	}
@@ -82,12 +97,17 @@ func (s *AchievementReadingService) GetRecipientAchievements(ctx context.Context
 		return nil, services.ErrInvalidInput
 	}
 
+	validatedCohortIDs, err := s.authz.RequireUserInCohorts(ctx, requestUserID, cohortIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	publicModeID, cohortModeID, privateModeID, err := s.getVisibilityAccessModeIDs(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	achievements, err := s.repo.ListAchievementsForRecipient(ctx, requestUserID, recipientID, cohortIDs, publicModeID, cohortModeID, privateModeID)
+	achievements, err := s.repo.ListAchievementsForRecipient(ctx, requestUserID, recipientID, validatedCohortIDs, publicModeID, cohortModeID, privateModeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get recipient achievements: %w", err)
 	}

@@ -56,7 +56,7 @@ func main() {
 
 	achievementCreationService := achievement_creation.NewAchievementCreationService(achievementRepo, lookupRepo, authzService)
 	achievementIssueService := achievementissue.NewService(achievementRepo, lookupRepo, issuanceLifecycleRepo, authzService)
-	achievementReadingService := achievement_reading_service.NewAchievementReadingService(achievementRepo, lookupRepo)
+	achievementReadingService := achievement_reading_service.NewAchievementReadingService(achievementRepo, lookupRepo, authzService)
 
 	achievementHandler := handlers.NewAchievementHandler(
 		achievementCreationService,
