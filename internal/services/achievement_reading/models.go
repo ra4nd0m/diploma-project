@@ -7,20 +7,29 @@ import (
 )
 
 type Output struct {
-	ID               int64           `json:"id"`
-	Name             string          `json:"name"`
-	Description      string          `json:"description"`
-	IconLink         string          `json:"icon_link"`
-	CohortID         int64           `json:"cohort_id"`
-	OwnerID          uuid.UUID       `json:"owner_id"`
-	AccessMode       LookupValue     `json:"access_mode"`
-	IssuanceKind     LookupValue     `json:"issuance_kind"`
-	ConditionType    *LookupValue    `json:"condition_type,omitempty"`
-	ConditionPayload json.RawMessage `json:"condition_payload,omitempty"`
+	ID               int64              `json:"id"`
+	Name             string             `json:"name"`
+	Description      string             `json:"description"`
+	IconLink         string             `json:"icon_link"`
+	CohortID         int64              `json:"cohort_id"`
+	OwnerID          uuid.UUID          `json:"owner_id"`
+	AccessMode       LookupValue        `json:"access_mode"`
+	IssuanceKind     LookupValue        `json:"issuance_kind"`
+	ConditionType    *LookupValue       `json:"condition_type,omitempty"`
+	ConditionPayload json.RawMessage    `json:"condition_payload,omitempty"`
+	IssuanceID       *int64             `json:"issuance_id,omitempty"`
+	Status           *AchievementStatus `json:"status,omitempty"`
+	AdditionalDetail *string            `json:"additional_detail,omitempty"`
+	ProgressPayload  json.RawMessage    `json:"progress_payload,omitempty"`
 }
 
 type LookupValue struct {
 	ID   int64  `json:"id"`
 	Code string `json:"code"`
 	Name string `json:"name"`
+}
+
+type AchievementStatus struct {
+	ID   int64  `json:"id"`
+	Code string `json:"code"`
 }
