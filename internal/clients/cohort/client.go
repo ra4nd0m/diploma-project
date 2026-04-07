@@ -87,3 +87,59 @@ func (c *Client) CanEditCohort(
 
 	return out.Allowed, nil
 }
+
+func (c *Client) IsUserInCohort(
+	ctt context.Context,
+	userID uuid.UUID,
+	cohortIDs []int64,
+) ([]int64, error) {
+	reqBody := struct {
+		UserID    uuid.UUID `json:"user_id"`
+		CohortIDs []int64   `json:"cohort_ids"`
+	}{
+		UserID:    userID,
+		CohortIDs: cohortIDs,
+	}
+
+	bodyBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal cohort membership request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(
+		ctt,
+		http.MethodPost,
+		c.baseURL+"/internal/cohorts/is-user-in",
+		bytes.NewReader(bodyBytes),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("build cohort membership request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Internal-Token", c.internalToken)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("send cohort membership request: %w", err)
+	}
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Printf("failed to close response body: %v\n", err)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("cohort membership returned status %d", resp.StatusCode)
+	}
+
+	var out struct {
+		CohortIDs []int64 `json:"cohort_ids"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return nil, fmt.Errorf("decode cohort membership response: %w", err)
+	}
+
+	return out.CohortIDs, nil
+}
