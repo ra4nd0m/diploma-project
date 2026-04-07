@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -16,6 +17,35 @@ type AchievementRepo struct {
 
 func NewAchievementRepo(db *sql.DB) *AchievementRepo {
 	return &AchievementRepo{db: db}
+}
+
+func (r *AchievementRepo) GetAchievement(ctx context.Context, achievementID int64) (*models.Achievement, error) {
+	const query = `
+		SELECT
+			id,
+			name,
+			description,
+			icon_link,
+			owner_id,
+			cohort_id,
+			access_mode,
+			issuance_kind,
+			condition_type,
+			condition_payload
+		FROM achievement
+		WHERE id = $1
+	`
+
+	row := r.db.QueryRowContext(ctx, query, achievementID)
+	achievement, err := scanAchievement(row)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get achievement %d: %w", achievementID, err)
+	}
+
+	return achievement, nil
 }
 
 func (r *AchievementRepo) GetAchievementsByOwner(
@@ -208,9 +238,9 @@ func (r *AchievementRepo) ListAchievementsForRecipient(
 			ai.status,
 			s.code,
 			ai.additional_detail,
-			ai.progress_payload,
+			ai.progress_payload
 		FROM achievement a
-		LEFT JOIN achievement_issue ai 
+		LEFT JOIN achievement_issuance ai 
 			ON ai.achievement_id = a.id 
 			AND ai.recipient_id = $1
 		LEFT JOIN achievement_status s
@@ -303,7 +333,6 @@ func scanPersonalAchievement(scanner interface{ Scan(dest ...any) error }) (*mod
 	var statusID sql.NullInt64
 	var statusCode sql.NullString
 	var progressPayload []byte
-	var issuanceCreatedOn sql.NullTime
 
 	err := scanner.Scan(
 		&item.AchievementID,
@@ -322,7 +351,6 @@ func scanPersonalAchievement(scanner interface{ Scan(dest ...any) error }) (*mod
 		&statusCode,
 		&item.AdditionalDetail,
 		&progressPayload,
-		&issuanceCreatedOn,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("scan personal achievement: %w", err)

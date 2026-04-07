@@ -26,9 +26,10 @@ func NewRouter(
 		r.Use(authMiddleware)
 
 		r.MethodFunc(http.MethodGet, "/achievements", achievementHandler.GetAchievements)
+		r.MethodFunc(http.MethodGet, "/achievements/owned", achievementHandler.GetOwnedAchievements)
+		r.MethodFunc(http.MethodGet, "/achievements/recipient/{recipientID}", achievementHandler.GetRecipientAchievements)
 		r.MethodFunc(http.MethodPost, "/achievements", achievementHandler.CreateAchievement)
 		r.MethodFunc(http.MethodPost, "/achievements/issue", achievementHandler.IssueAchievement)
-		r.MethodFunc(http.MethodGet, "/achievements/{achievementID}", achievementHandler.GetAchievementByID)
 	})
 
 	return r

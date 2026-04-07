@@ -25,8 +25,9 @@ type AchievementIssueService interface {
 }
 
 type AchievementReadingService interface {
-	GetAchievement(ctx context.Context, achievementID int64) (*achievement_reading_service.Output, error)
-	GetAchievements(ctx context.Context, userID uuid.UUID) ([]*achievement_reading_service.Output, error)
+	GetVisibleAchievements(ctx context.Context, userID uuid.UUID, cohortIDs []int64) ([]*achievement_reading_service.Output, error)
+	GetOwnedAchievements(ctx context.Context, ownerID uuid.UUID, cohortIDs []int64) ([]*achievement_reading_service.Output, error)
+	GetRecipientAchievements(ctx context.Context, requestUserID, recipientID uuid.UUID, cohortIDs []int64) ([]*achievement_reading_service.Output, error)
 }
 
 type AchievementHandler struct {
@@ -89,7 +90,13 @@ func (h *AchievementHandler) GetAchievements(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	items, err := h.readingService.GetAchievements(r.Context(), userID)
+	cohortIDs, err := parseCohortIDs(r.URL.Query().Get("cohort_ids"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid cohort_ids")
+		return
+	}
+
+	items, err := h.readingService.GetVisibleAchievements(r.Context(), userID, cohortIDs)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -98,31 +105,70 @@ func (h *AchievementHandler) GetAchievements(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, achievementsResponseFromOutput(items))
 }
 
-func (h *AchievementHandler) GetAchievementByID(w http.ResponseWriter, r *http.Request) {
+func (h *AchievementHandler) GetOwnedAchievements(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeMethodNotAllowed(w, http.MethodGet)
 		return
 	}
 
-	pathID := strings.TrimPrefix(r.URL.Path, "/achievements/")
-	if pathID == "" || strings.Contains(pathID, "/") {
-		writeError(w, http.StatusNotFound, "not found")
+	ownerID, err := userIDFromClaims(r.Context())
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	id, err := strconv.ParseInt(pathID, 10, 64)
-	if err != nil || id <= 0 {
-		writeError(w, http.StatusBadRequest, "invalid achievement id")
+	cohortIDs, err := parseCohortIDs(r.URL.Query().Get("cohort_ids"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid cohort_ids")
 		return
 	}
 
-	item, err := h.readingService.GetAchievement(r.Context(), id)
+	items, err := h.readingService.GetOwnedAchievements(r.Context(), ownerID, cohortIDs)
 	if err != nil {
 		writeServiceError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, achievementResponseFromOutput(item))
+	writeJSON(w, http.StatusOK, achievementsResponseFromOutput(items))
+}
+
+func (h *AchievementHandler) GetRecipientAchievements(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeMethodNotAllowed(w, http.MethodGet)
+		return
+	}
+
+	requestUserID, err := userIDFromClaims(r.Context())
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	recipientIDRaw := strings.TrimPrefix(r.URL.Path, "/achievements/recipient/")
+	if recipientIDRaw == "" || strings.Contains(recipientIDRaw, "/") {
+		writeError(w, http.StatusNotFound, "not found")
+		return
+	}
+
+	recipientID, err := uuid.Parse(recipientIDRaw)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid recipient id")
+		return
+	}
+
+	cohortIDs, err := parseCohortIDs(r.URL.Query().Get("cohort_ids"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid cohort_ids")
+		return
+	}
+
+	items, err := h.readingService.GetRecipientAchievements(r.Context(), requestUserID, recipientID, cohortIDs)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, achievementsResponseFromOutput(items))
 }
 
 func (h *AchievementHandler) IssueAchievement(w http.ResponseWriter, r *http.Request) {
@@ -215,4 +261,28 @@ func userIDFromClaims(ctx context.Context) (uuid.UUID, error) {
 	}
 
 	return userID, nil
+}
+
+func parseCohortIDs(raw string) ([]int64, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return []int64{}, nil
+	}
+
+	parts := strings.Split(raw, ",")
+	cohortIDs := make([]int64, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+
+		id, err := strconv.ParseInt(part, 10, 64)
+		if err != nil || id <= 0 {
+			return nil, errors.New("invalid cohort id")
+		}
+		cohortIDs = append(cohortIDs, id)
+	}
+
+	return cohortIDs, nil
 }
