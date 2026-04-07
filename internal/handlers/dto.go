@@ -84,6 +84,15 @@ type achievementResponseDTO struct {
 	IssuanceKind     lookupValueDTO  `json:"issuance_kind"`
 	ConditionType    *lookupValueDTO `json:"condition_type,omitempty"`
 	ConditionPayload json.RawMessage `json:"condition_payload,omitempty"`
+	IssuanceID       *int64          `json:"issuance_id,omitempty"`
+	Status           *statusDTO      `json:"status,omitempty"`
+	AdditionalDetail *string         `json:"additional_detail,omitempty"`
+	ProgressPayload  json.RawMessage `json:"progress_payload,omitempty"`
+}
+
+type statusDTO struct {
+	ID   int64  `json:"id"`
+	Code string `json:"code"`
 }
 
 func achievementResponseFromOutput(out *achievement_reading_service.Output) *achievementResponseDTO {
@@ -119,6 +128,21 @@ func achievementResponseFromOutput(out *achievement_reading_service.Output) *ach
 		},
 		ConditionType:    conditionType,
 		ConditionPayload: out.ConditionPayload,
+		IssuanceID:       out.IssuanceID,
+		Status:           statusFromOutput(out.Status),
+		AdditionalDetail: out.AdditionalDetail,
+		ProgressPayload:  out.ProgressPayload,
+	}
+}
+
+func statusFromOutput(status *achievement_reading_service.AchievementStatus) *statusDTO {
+	if status == nil {
+		return nil
+	}
+
+	return &statusDTO{
+		ID:   status.ID,
+		Code: status.Code,
 	}
 }
 
