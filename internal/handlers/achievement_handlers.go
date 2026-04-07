@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -144,8 +145,8 @@ func (h *AchievementHandler) GetRecipientAchievements(w http.ResponseWriter, r *
 		return
 	}
 
-	recipientIDRaw := strings.TrimPrefix(r.URL.Path, "/achievements/recipient/")
-	if recipientIDRaw == "" || strings.Contains(recipientIDRaw, "/") {
+	recipientIDRaw := chi.URLParam(r, "recipientID")
+	if recipientIDRaw == "" {
 		writeError(w, http.StatusNotFound, "not found")
 		return
 	}
