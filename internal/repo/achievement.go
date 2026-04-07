@@ -18,7 +18,11 @@ func NewAchievementRepo(db *sql.DB) *AchievementRepo {
 	return &AchievementRepo{db: db}
 }
 
-func (r *AchievementRepo) GetAchievementsByOwner(ctx context.Context, userID uuid.UUID) ([]*models.Achievement, error) {
+func (r *AchievementRepo) GetAchievementsByOwner(
+	ctx context.Context,
+	userID uuid.UUID,
+	cohortIDs []int64,
+) ([]*models.Achievement, error) {
 	const query = `
 		SELECT
 			id,
@@ -33,10 +37,14 @@ func (r *AchievementRepo) GetAchievementsByOwner(ctx context.Context, userID uui
 			condition_payload
 		FROM achievement
 		WHERE owner_id = $1
+			AND (
+					cardinality($2::bigint[]) = 0
+					OR cohort_id = ANY($2::bigint[])
+			)
 		ORDER BY id DESC
 	`
 
-	rows, err := r.db.QueryContext(ctx, query, userID)
+	rows, err := r.db.QueryContext(ctx, query, userID, cohortIDs)
 	if err != nil {
 		return nil, fmt.Errorf("get achievements by owner %s: %w", userID, err)
 	}
