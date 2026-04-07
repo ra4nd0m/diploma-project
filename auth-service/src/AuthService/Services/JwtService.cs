@@ -1,0 +1,58 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using AuthService.Models;
+using AuthService.Utils;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+
+namespace AuthService.Services;
+
+public class JwtService(
+    ILogger<JwtService> logger,
+    IConfiguration configuration,
+    UserManager<User> userManager) : IJwtService
+{
+    public async Task<string> GenerateJwtToken(User user)
+    {
+        logger.LogInformation("Generating JWT token for user {email}", EmailObfuscator.ObfuscateEmail(user.Email));
+
+        var key = configuration["Jwt:Key"]
+            ?? throw new InvalidOperationException("JWT key is not configured");
+
+        var tokenExpiryRaw = configuration["Jwt:TokenExpiryMinutes"]
+            ?? throw new InvalidOperationException("Token expiration is not configured");
+
+        if (!int.TryParse(tokenExpiryRaw, out var tokenExpiryMinutes))
+        {
+            throw new InvalidOperationException("Token expiration is invalid");
+        }
+
+        var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+        var signingCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+
+        var roles = await userManager.GetRolesAsync(user);
+
+        var email = user.Email ?? throw new InvalidOperationException("User email is not set");
+
+        var primaryRole = roles.FirstOrDefault() ?? string.Empty;
+
+        var claims = new List<Claim>
+        {
+            new("sub", user.Id),
+            new("role", primaryRole),
+            new("name", user.DisplayName ?? email),
+            new("email", email)
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: configuration["Jwt:Issuer"],
+            audience: configuration["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(tokenExpiryMinutes),
+            signingCredentials: signingCredentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
