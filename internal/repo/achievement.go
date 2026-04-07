@@ -46,7 +46,7 @@ func (r *AchievementRepo) GetAchievement(ctx context.Context, achievementID int6
 	return achievement, nil
 }
 
-func (r *AchievementRepo) GetAchievements(ctx context.Context, userID uuid.UUID) ([]*models.Achievement, error) {
+func (r *AchievementRepo) GetAchievementsByOwner(ctx context.Context, userID uuid.UUID) ([]*models.Achievement, error) {
 	const query = `
 		SELECT
 			id,
