@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,12 +30,12 @@ func NewClient(baseURL, internalToken string) *Client {
 }
 
 type canEditRequest struct {
-	UserID   uuid.UUID `json:"user_id"`
-	CohortID int64     `json:"cohort_id"`
+	UserID   string `json:"user_id"`
+	CohortID string `json:"cohort_id"`
 }
 
 type canEditResponse struct {
-	Allowed bool `json:"allowed"`
+	IsOwner bool `json:"is_owner"`
 }
 
 func (c *Client) CanEditCohort(
@@ -43,8 +44,8 @@ func (c *Client) CanEditCohort(
 	cohortID int64,
 ) (bool, error) {
 	reqBody := canEditRequest{
-		UserID:   userID,
-		CohortID: cohortID,
+		UserID:   userID.String(),
+		CohortID: strconv.FormatInt(cohortID, 10),
 	}
 
 	bodyBytes, err := json.Marshal(reqBody)
@@ -85,7 +86,7 @@ func (c *Client) CanEditCohort(
 		return false, fmt.Errorf("decode cohort auth response: %w", err)
 	}
 
-	return out.Allowed, nil
+	return out.IsOwner, nil
 }
 
 func (c *Client) IsUserInCohort(
