@@ -1,7 +1,9 @@
 package models
 
 const (
-	AccessModeCohort = "cohort"
+	AccessModePublic  = "public"
+	AccessModeCohort  = "cohort"
+	AccessModePrivate = "private"
 
 	IssuanceKindManual = "manual"
 
