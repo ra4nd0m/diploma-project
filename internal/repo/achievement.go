@@ -17,35 +17,6 @@ func NewAchievementRepo(db *sql.DB) *AchievementRepo {
 	return &AchievementRepo{db: db}
 }
 
-func (r *AchievementRepo) GetAchievement(ctx context.Context, achievementID int64) (*models.Achievement, error) {
-	const query = `
-		SELECT
-			id,
-			name,
-			description,
-			icon_link,
-			owner_id,
-			cohort_id,
-			access_mode,
-			issuance_kind,
-			condition_type,
-			condition_payload
-		FROM achievement
-		WHERE id = $1
-	`
-
-	row := r.db.QueryRowContext(ctx, query, achievementID)
-	achievement, err := scanAchievement(row)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("get achievement by id %d: %w", achievementID, err)
-	}
-
-	return achievement, nil
-}
-
 func (r *AchievementRepo) GetAchievementsByOwner(ctx context.Context, userID uuid.UUID) ([]*models.Achievement, error) {
 	const query = `
 		SELECT
@@ -134,6 +105,72 @@ func (r *AchievementRepo) CreateAchievement(ctx context.Context, achievement mod
 	}
 
 	return id, nil
+}
+
+func (r *AchievementRepo) ListVisibleAchievements(
+	ctx context.Context,
+	userID uuid.UUID,
+	cohortIDs []int64,
+	publicAccessModeID int64,
+	cohortAccessModeID int64,
+	privateAccessModeID int64,
+) ([]*models.Achievement, error) {
+	const query = `
+		SELECT
+			a.id,
+			a.name,
+			a.description,
+			a.icon_link,
+			a.owner_id,
+			a.cohort_id,
+			a.access_mode,
+			a.issuance_kind,
+			a.condition_type,
+			a.condition_payload
+		FROM achievement a
+		WHERE 
+			a.access_mode = $1
+			OR (
+				a.access_mode = $2
+				AND a.cohort_id = ANY($3::bigint[])
+			) 
+			OR (
+				a.access_mode = $4
+				AND a.owner_id = $5
+			)
+		ORDER BY a.id DESC
+	`
+	rows, err := r.db.QueryContext(
+		ctx,
+		query,
+		publicAccessModeID,
+		cohortAccessModeID,
+		cohortIDs,
+		privateAccessModeID,
+		userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list visible achievements for user %s in cohorts %v: %w", userID, cohortIDs, err)
+	}
+
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	achievements := make([]*models.Achievement, 0)
+	for rows.Next() {
+		achievement, err := scanAchievement(rows)
+		if err != nil {
+			return nil, fmt.Errorf("scan visible achievements for user %s in cohorts %v: %w", userID, cohortIDs, err)
+		}
+		achievements = append(achievements, achievement)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate visible achievements for user %s in cohorts %v: %w", userID, cohortIDs, err)
+	}
+
+	return achievements, nil
 }
 
 func scanAchievement(scanner interface{ Scan(dest ...any) error }) (*models.Achievement, error) {
