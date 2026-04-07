@@ -23,3 +23,12 @@ type CohortIsOwnedRequest struct {
 	CohortID string `json:"cohort_id"`
 	UserID   string `json:"user_id"`
 }
+
+type CohortIsUserInRequest struct {
+	UserID    string  `json:"user_id"`
+	CohortIDs []int64 `json:"cohort_ids"`
+}
+
+type CohortIsUserInResponse struct {
+	CohortIDs []int64 `json:"cohort_ids"`
+}

@@ -23,6 +23,7 @@ type CohortService interface {
 	AddsUserToCohortByInvite(ctx context.Context, cohortID int64, userID uuid.UUID) error
 	GenerateInviteTokenToCohort(ctx context.Context, cohortID int64) (string, error)
 	IsCohortOwnedByUser(ctx context.Context, cohortID int64, userID uuid.UUID) (bool, error)
+	IsUserInCohorts(ctx context.Context, userID uuid.UUID, cohortIDs []int64) ([]int64, error)
 }
 
 type InviteTokenParser interface {
@@ -296,4 +297,30 @@ func (h *CohortHandler) IsOwner(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]bool{"is_owner": isOwner})
+}
+
+func (h *CohortHandler) IsUserIn(w http.ResponseWriter, r *http.Request) {
+	var req dto.CohortIsUserInRequest
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid req body")
+		return
+	}
+
+	userID, err := uuid.Parse(req.UserID)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user id")
+		return
+	}
+
+	cohortIDs, err := h.cohortService.IsUserInCohorts(r.Context(), userID, req.CohortIDs)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to check memberships")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, dto.CohortIsUserInResponse{CohortIDs: cohortIDs})
 }

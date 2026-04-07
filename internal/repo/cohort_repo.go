@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"user-service/internal/models"
 
 	"github.com/google/uuid"
@@ -232,4 +233,53 @@ func (r *CohortRepo) RemoveUserFromCohort(ctx context.Context, cohortID int64, u
 	}
 
 	return nil
+}
+
+func (r *CohortRepo) GetUserMembershipCohortIDs(ctx context.Context, userID uuid.UUID, cohortIDs []int64) ([]int64, error) {
+	if len(cohortIDs) == 0 {
+		return []int64{}, nil
+	}
+
+	placeholders := make([]string, 0, len(cohortIDs))
+	args := make([]any, 0, len(cohortIDs)+1)
+	args = append(args, userID)
+
+	for i, cohortID := range cohortIDs {
+		placeholders = append(placeholders, fmt.Sprintf("$%d", i+2))
+		args = append(args, cohortID)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT cohort_id
+		FROM user_cohort
+		WHERE user_id = $1
+			AND cohort_id IN (%s)
+		ORDER BY cohort_id
+	`, strings.Join(placeholders, ","))
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query user cohort memberships %w", err)
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			fmt.Printf("Error closing rows: %v\n", err)
+		}
+	}()
+
+	out := make([]int64, 0, len(cohortIDs))
+	for rows.Next() {
+		var cohortID int64
+		if err := rows.Scan(&cohortID); err != nil {
+			return nil, fmt.Errorf("scan user cohort membership %w", err)
+		}
+		out = append(out, cohortID)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate user cohort membership rows %w", err)
+	}
+
+	return out, nil
 }

@@ -43,6 +43,7 @@ func NewRouter(
 	r.Group(func(internal chi.Router) {
 		internal.Use(internalTokenValidator)
 		internal.Post("/internal/cohorts/can-edit", cohortHandler.IsOwner)
+		internal.Post("/internal/cohorts/is-user-in", cohortHandler.IsUserIn)
 	})
 
 	return r
