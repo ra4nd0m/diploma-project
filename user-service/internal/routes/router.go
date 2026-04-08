@@ -24,6 +24,10 @@ func NewRouter(
 	r.Use(chimiddleware.Recoverer)
 	r.Use(authmiddleware.NewRequestLogMiddleware(logger))
 
+	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	auth := authmiddleware.NewAuthMiddleware(authManager)
 	internalTokenValidator := authmiddleware.NewInternalTokenMiddleware(internalToken)
 
