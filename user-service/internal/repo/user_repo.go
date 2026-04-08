@@ -22,7 +22,7 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 func (r *UserRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, bool, error) {
 	const query = `
 		SELECT id, preferences
-		FROM user
+		FROM "user"
 		WHERE id = $1
 	`
 
@@ -43,7 +43,7 @@ func (r *UserRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User,
 
 func (r *UserRepo) CreateUser(ctx context.Context, user *models.User) error {
 	const query = `
-		INSERT INTO user (id, display_name, preferences)
+		INSERT INTO "user" (id, display_name, preferences)
 		VALUES ($1, $2, $3)
 	`
 
@@ -57,7 +57,7 @@ func (r *UserRepo) CreateUser(ctx context.Context, user *models.User) error {
 
 func (r *UserRepo) UpdateUserPreferences(ctx context.Context, id uuid.UUID, preferences json.RawMessage) error {
 	const query = `
-		UPDATE user
+		UPDATE "user"
 		SET preferences = $2
 		WHERE id = $1
 	`
