@@ -19,6 +19,11 @@ func (r *statusRecorder) WriteHeader(status int) {
 func NewRequestLogMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if logger == nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			start := time.Now()
 
 			rec := &statusRecorder{
