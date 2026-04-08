@@ -1,6 +1,7 @@
 package routes
 
 import (
+	_ "achievement-service/docs"
 	"achievement-service/internal/handlers"
 	"achievement-service/internal/middleware"
 	"log/slog"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 func NewRouter(
@@ -25,6 +27,9 @@ func NewRouter(
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json")))
 
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware)

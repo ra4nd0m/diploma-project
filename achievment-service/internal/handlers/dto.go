@@ -9,14 +9,29 @@ import (
 	"github.com/google/uuid"
 )
 
+type rawJSON []byte
+
+func (r rawJSON) MarshalJSON() ([]byte, error) {
+	return json.RawMessage(r).MarshalJSON()
+}
+
+func (r *rawJSON) UnmarshalJSON(data []byte) error {
+	var m json.RawMessage
+	if err := m.UnmarshalJSON(data); err != nil {
+		return err
+	}
+	*r = rawJSON(m)
+	return nil
+}
+
 type createAchievementRequestDTO struct {
-	Name             string          `json:"name"`
-	Description      string          `json:"description"`
-	IconLink         string          `json:"icon_link"`
-	CohortID         int64           `json:"cohort_id"`
-	ConditionType    *string         `json:"condition_type,omitempty"`
-	IssuanceKind     string          `json:"issuance_kind"`
-	ConditionPayload json.RawMessage `json:"condition_payload,omitempty"`
+	Name             string  `json:"name"`
+	Description      string  `json:"description"`
+	IconLink         string  `json:"icon_link"`
+	CohortID         int64   `json:"cohort_id"`
+	ConditionType    *string `json:"condition_type,omitempty"`
+	IssuanceKind     string  `json:"issuance_kind"`
+	ConditionPayload rawJSON `json:"condition_payload,omitempty" swaggertype:"object"`
 }
 
 func (d createAchievementRequestDTO) toInput(ownerID uuid.UUID) achievement_creation.Input {
@@ -28,12 +43,16 @@ func (d createAchievementRequestDTO) toInput(ownerID uuid.UUID) achievement_crea
 		OwnerID:          ownerID,
 		ConditionType:    d.ConditionType,
 		IssuanceKind:     d.IssuanceKind,
-		ConditionPayload: d.ConditionPayload,
+		ConditionPayload: json.RawMessage(d.ConditionPayload),
 	}
 }
 
 type createAchievementResponseDTO struct {
 	ID int64 `json:"id"`
+}
+
+type errorResponseDTO struct {
+	Error string `json:"error"`
 }
 
 type issueAchievementRequestDTO struct {
@@ -83,11 +102,11 @@ type achievementResponseDTO struct {
 	AccessMode       lookupValueDTO  `json:"access_mode"`
 	IssuanceKind     lookupValueDTO  `json:"issuance_kind"`
 	ConditionType    *lookupValueDTO `json:"condition_type,omitempty"`
-	ConditionPayload json.RawMessage `json:"condition_payload,omitempty"`
+	ConditionPayload rawJSON         `json:"condition_payload,omitempty" swaggertype:"object"`
 	IssuanceID       *int64          `json:"issuance_id,omitempty"`
 	Status           *statusDTO      `json:"status,omitempty"`
 	AdditionalDetail *string         `json:"additional_detail,omitempty"`
-	ProgressPayload  json.RawMessage `json:"progress_payload,omitempty"`
+	ProgressPayload  rawJSON         `json:"progress_payload,omitempty" swaggertype:"object"`
 }
 
 type statusDTO struct {
@@ -127,11 +146,11 @@ func achievementResponseFromOutput(out *achievement_reading_service.Output) *ach
 			Name: out.IssuanceKind.Name,
 		},
 		ConditionType:    conditionType,
-		ConditionPayload: out.ConditionPayload,
+		ConditionPayload: rawJSON(out.ConditionPayload),
 		IssuanceID:       out.IssuanceID,
 		Status:           statusFromOutput(out.Status),
 		AdditionalDetail: out.AdditionalDetail,
-		ProgressPayload:  out.ProgressPayload,
+		ProgressPayload:  rawJSON(out.ProgressPayload),
 	}
 }
 

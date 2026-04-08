@@ -60,6 +60,21 @@ func (h *AchievementHandler) Achievements(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// CreateAchievement godoc
+// @Summary Create achievement
+// @Description Creates a new achievement in the specified cohort.
+// @Tags achievements
+// @Accept json
+// @Produce json
+// @Param payload body createAchievementRequestDTO true "Create achievement payload"
+// @Success 201 {object} createAchievementResponseDTO
+// @Failure 400 {object} errorResponseDTO
+// @Failure 401 {object} errorResponseDTO
+// @Failure 403 {object} errorResponseDTO
+// @Failure 404 {object} errorResponseDTO
+// @Failure 500 {object} errorResponseDTO
+// @Security BearerAuth
+// @Router /achievements [post]
 func (h *AchievementHandler) CreateAchievement(w http.ResponseWriter, r *http.Request) {
 	var req createAchievementRequestDTO
 	if err := decodeJSON(r, &req); err != nil {
@@ -84,6 +99,20 @@ func (h *AchievementHandler) CreateAchievement(w http.ResponseWriter, r *http.Re
 	writeJSON(w, http.StatusCreated, createAchievementResponseDTO{ID: id})
 }
 
+// GetAchievements godoc
+// @Summary Get visible achievements
+// @Description Returns achievements visible to the authenticated user.
+// @Tags achievements
+// @Produce json
+// @Param cohort_ids query string false "Comma-separated cohort IDs"
+// @Success 200 {array} achievementResponseDTO
+// @Failure 400 {object} errorResponseDTO
+// @Failure 401 {object} errorResponseDTO
+// @Failure 403 {object} errorResponseDTO
+// @Failure 404 {object} errorResponseDTO
+// @Failure 500 {object} errorResponseDTO
+// @Security BearerAuth
+// @Router /achievements [get]
 func (h *AchievementHandler) GetAchievements(w http.ResponseWriter, r *http.Request) {
 	userID, err := userIDFromClaims(r.Context())
 	if err != nil {
@@ -106,6 +135,20 @@ func (h *AchievementHandler) GetAchievements(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, achievementsResponseFromOutput(items))
 }
 
+// GetOwnedAchievements godoc
+// @Summary Get owned achievements
+// @Description Returns achievements created by the authenticated user.
+// @Tags achievements
+// @Produce json
+// @Param cohort_ids query string false "Comma-separated cohort IDs"
+// @Success 200 {array} achievementResponseDTO
+// @Failure 400 {object} errorResponseDTO
+// @Failure 401 {object} errorResponseDTO
+// @Failure 403 {object} errorResponseDTO
+// @Failure 404 {object} errorResponseDTO
+// @Failure 500 {object} errorResponseDTO
+// @Security BearerAuth
+// @Router /achievements/owned [get]
 func (h *AchievementHandler) GetOwnedAchievements(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeMethodNotAllowed(w, http.MethodGet)
@@ -133,6 +176,21 @@ func (h *AchievementHandler) GetOwnedAchievements(w http.ResponseWriter, r *http
 	writeJSON(w, http.StatusOK, achievementsResponseFromOutput(items))
 }
 
+// GetRecipientAchievements godoc
+// @Summary Get recipient achievements
+// @Description Returns achievements of a specific recipient available to the authenticated user.
+// @Tags achievements
+// @Produce json
+// @Param recipientID path string true "Recipient ID (UUID)"
+// @Param cohort_ids query string false "Comma-separated cohort IDs"
+// @Success 200 {array} achievementResponseDTO
+// @Failure 400 {object} errorResponseDTO
+// @Failure 401 {object} errorResponseDTO
+// @Failure 403 {object} errorResponseDTO
+// @Failure 404 {object} errorResponseDTO
+// @Failure 500 {object} errorResponseDTO
+// @Security BearerAuth
+// @Router /achievements/recipient/{recipientID} [get]
 func (h *AchievementHandler) GetRecipientAchievements(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeMethodNotAllowed(w, http.MethodGet)
@@ -166,6 +224,22 @@ func (h *AchievementHandler) GetRecipientAchievements(w http.ResponseWriter, r *
 	writeJSON(w, http.StatusOK, achievementsResponseFromOutput(items))
 }
 
+// IssueAchievement godoc
+// @Summary Issue achievement
+// @Description Issues an achievement to a recipient.
+// @Tags achievements
+// @Accept json
+// @Produce json
+// @Param payload body issueAchievementRequestDTO true "Issue achievement payload"
+// @Success 201 {object} issueAchievementResponseDTO
+// @Failure 400 {object} errorResponseDTO
+// @Failure 401 {object} errorResponseDTO
+// @Failure 403 {object} errorResponseDTO
+// @Failure 404 {object} errorResponseDTO
+// @Failure 409 {object} errorResponseDTO
+// @Failure 500 {object} errorResponseDTO
+// @Security BearerAuth
+// @Router /achievements/issue [post]
 func (h *AchievementHandler) IssueAchievement(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeMethodNotAllowed(w, http.MethodPost)

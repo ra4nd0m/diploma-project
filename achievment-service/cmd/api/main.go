@@ -1,5 +1,14 @@
 package main
 
+// @title Achievement Service API
+// @version 1.0
+// @description API for creating, issuing, and reading achievements.
+// @BasePath /
+// @schemes http https
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 import (
 	cohortclient "achievement-service/internal/clients/cohort"
 	"achievement-service/internal/config"
