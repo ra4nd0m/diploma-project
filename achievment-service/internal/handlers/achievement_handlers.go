@@ -145,13 +145,7 @@ func (h *AchievementHandler) GetRecipientAchievements(w http.ResponseWriter, r *
 		return
 	}
 
-	recipientIDRaw := chi.URLParam(r, "recipientID")
-	if recipientIDRaw == "" {
-		writeError(w, http.StatusNotFound, "not found")
-		return
-	}
-
-	recipientID, err := uuid.Parse(recipientIDRaw)
+	recipientID, err := uuid.Parse(chi.URLParam(r, "recipientID"))
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid recipient id")
 		return
