@@ -1,3 +1,36 @@
+// Package main contains the entry point for the User Service API.
+//
+// The User Service API provides endpoints for managing user profiles and cohorts.
+//
+// # API Documentation
+//
+// The service exposes REST endpoints for:
+//   - User profile management (/me)
+//   - Cohort management (/cohorts)
+//   - Cohort member access (/cohorts/{id}/members)
+//   - Cohort invitations (/cohorts/{id}/invite)
+//   - Internal service operations for other microservices
+//
+// # Authentication
+//
+// Protected endpoints require a Bearer token in the Authorization header.
+// Internal endpoints require an Internal-Token header for inter-service communication.
+//
+// # Database
+//
+// The service uses PostgreSQL for data persistence with automatic schema migration.
+//
+// @title User Service API
+// @version 1.0
+// @description User profile and cohort management service
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @securityDefinitions.apikey InternalToken
+// @in header
+// @name Internal-Token
 package main
 
 import (
@@ -19,6 +52,16 @@ import (
 	"user-service/internal/services"
 )
 
+// main initializes and starts the User Service API server.
+// It performs the following:
+//   - Loads configuration from environment variables
+//   - Initializes the database connection and runs migrations
+//   - Creates service instances for user and cohort management
+//   - Sets up HTTP routes with authentication middleware
+//   - Starts the HTTP server and handles graceful shutdown
+//
+// Environment variables are loaded via the config package.
+// The server listens on the address specified in HTTPAddr config.
 func main() {
 	cfg, err := config.Load()
 	if err != nil {

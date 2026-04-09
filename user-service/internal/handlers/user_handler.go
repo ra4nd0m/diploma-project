@@ -11,19 +11,34 @@ import (
 	"github.com/google/uuid"
 )
 
+// UserService defines the interface for user business logic operations.
 type UserService interface {
 	GetOrCreateUser(ctx context.Context, id uuid.UUID) (*models.User, error)
 	UpdateUserPreferences(ctx context.Context, id uuid.UUID, preferences json.RawMessage) error
 }
 
+// UserHandler handles HTTP requests related to user profile operations.
+// It provides endpoints for retrieving and managing user information.
 type UserHandler struct {
 	userService UserService
 }
 
+// NewUserHandler creates a new UserHandler with the provided service dependency.
 func NewUserHandler(userService UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
+// GetMeContext returns the authenticated user's profile.
+// @Summary Get current user profile
+// @Description Returns the current user profile, creating the user record if it does not exist yet.
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.UserResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /me [get]
 func (h *UserHandler) GetMeContext(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {

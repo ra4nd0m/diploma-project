@@ -74,14 +74,22 @@ public static class AuthRoutes
 
                 context.Response.Cookies.Append("refreshToken", refreshToken.Token, BuildCookieOptions(refreshToken.Expires));
 
-                return Results.Ok(new { Token = accessToken });
+                return Results.Ok(new AuthTokenResponse(accessToken));
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to register user with email {Email}", EmailObfuscator.ObfuscateEmail(registerDto.Email));
                 return Results.StatusCode(StatusCodes.Status500InternalServerError);
             }
-        });
+        })
+        .Accepts<RegisterDto>("application/json")
+        .Produces<AuthTokenResponse>(StatusCodes.Status200OK, "application/json")
+        .Produces<string>(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status500InternalServerError)
+        .WithName("RegisterUser")
+        .WithSummary("Register a new account")
+        .WithDescription("Creates a new user account for either a student or teacher, assigns the requested role, and returns an access token while setting the refresh token cookie.")
+        .WithTags("Auth");
 
         app.MapPost("/login", async (
             IJwtService jwtService,
@@ -115,14 +123,22 @@ public static class AuthRoutes
 
                 context.Response.Cookies.Append("refreshToken", refreshToken.Token, BuildCookieOptions(refreshToken.Expires));
 
-                return Results.Ok(new { Token = accessToken });
+                return Results.Ok(new AuthTokenResponse(accessToken));
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to login user with email {Email}", EmailObfuscator.ObfuscateEmail(loginDto.Email));
                 return Results.StatusCode(StatusCodes.Status500InternalServerError);
             }
-        });
+        })
+        .Accepts<LoginDto>("application/json")
+        .Produces<AuthTokenResponse>(StatusCodes.Status200OK, "application/json")
+        .Produces<string>(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status500InternalServerError)
+        .WithName("LoginUser")
+        .WithSummary("Log in an existing user")
+        .WithDescription("Validates the supplied credentials, issues a new access token, and refreshes the refresh token cookie.")
+        .WithTags("Auth");
 
         app.MapPost("/refresh", async (
             IJwtService jwtService,
@@ -165,14 +181,21 @@ public static class AuthRoutes
                 var newAccessToken = await jwtService.GenerateJwtToken(user);
                 context.Response.Cookies.Append("refreshToken", rotatedRefreshToken.Token, BuildCookieOptions(rotatedRefreshToken.Expires));
 
-                return Results.Ok(new { Token = newAccessToken });
+                return Results.Ok(new AuthTokenResponse(newAccessToken));
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to refresh token");
                 return Results.StatusCode(StatusCodes.Status500InternalServerError);
             }
-        });
+        })
+        .Produces<AuthTokenResponse>(StatusCodes.Status200OK, "application/json")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces(StatusCodes.Status500InternalServerError)
+        .WithName("RefreshToken")
+        .WithSummary("Refresh access token")
+        .WithDescription("Uses the refresh token cookie to rotate the refresh token and issue a new access token.")
+        .WithTags("Auth");
 
         app.MapPost("/logout", async (IRefreshTokenService refreshTokenService, HttpContext context) =>
         {
@@ -193,7 +216,13 @@ public static class AuthRoutes
                 logger.LogError(ex, "Failed to logout user");
                 return Results.StatusCode(StatusCodes.Status500InternalServerError);
             }
-        });
+        })
+        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status500InternalServerError)
+        .WithName("LogoutUser")
+        .WithSummary("Log out the current user")
+        .WithDescription("Revokes the refresh token cookie if present and ends the current session.")
+        .WithTags("Auth");
     }
 
     private static CookieOptions BuildCookieOptions(DateTime expires)

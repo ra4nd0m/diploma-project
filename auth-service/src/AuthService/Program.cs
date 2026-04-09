@@ -32,9 +32,21 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
+builder.Services.AddOpenApi();
+
 var app = builder.Build();
 
 await DatabaseInitializer.InitializeAsync(app);
+
+if(app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json","v1");
+    });
+}
 
 app.MapAuthRoutes();
 

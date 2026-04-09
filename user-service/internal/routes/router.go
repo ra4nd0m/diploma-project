@@ -3,11 +3,14 @@ package routes
 import (
 	"log/slog"
 	"net/http"
+	"user-service/docs"
+	_ "user-service/docs"
 	"user-service/internal/handlers"
 	authmiddleware "user-service/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 func NewRouter(
@@ -26,6 +29,15 @@ func NewRouter(
 
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
+	})
+
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
+	r.Get("/swagger/doc.json", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte(docs.SwaggerInfo.ReadDoc())); err != nil {
+			logger.Error("failed to write swagger doc", "error", err)
+		}
 	})
 
 	auth := authmiddleware.NewAuthMiddleware(authManager)
