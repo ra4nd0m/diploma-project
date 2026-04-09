@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"achievement-service/docs"
+	_ "achievement-service/docs"
 	"achievement-service/internal/handlers"
 	"achievement-service/internal/middleware"
 	"log/slog"
@@ -8,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 func NewRouter(
@@ -24,6 +27,15 @@ func NewRouter(
 
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
+	})
+
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
+	r.Get("/swagger/doc.json", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte(docs.SwaggerInfo.ReadDoc())); err != nil {
+			logger.Error("write swagger doc", "error", slog.Any("error", err))
+		}
 	})
 
 	r.Group(func(r chi.Router) {
