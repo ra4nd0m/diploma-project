@@ -1,0 +1,537 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "This service manages the creation, issuance, and retrieval of achievements within cohorts",
+        "title": "Achievement Service API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/api/v1/achievements": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves all achievements visible to the authenticated user from specified cohorts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "achievements"
+                ],
+                "summary": "List visible achievements",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Comma-separated list of cohort IDs",
+                        "name": "cohort_ids",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.achievementResponseDTO"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Creates a new achievement in the system. Requires authentication.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "achievements"
+                ],
+                "summary": "Create a new achievement",
+                "parameters": [
+                    {
+                        "description": "Achievement creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.createAchievementRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.createAchievementResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/achievements/issue": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Issues (awards) an achievement to a specific user. Requires authentication and proper authorization.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "achievements"
+                ],
+                "summary": "Issue an achievement to a recipient",
+                "parameters": [
+                    {
+                        "description": "Achievement issuance request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.issueAchievementRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.issueAchievementResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or recipient ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/achievements/owned": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves all achievements created/owned by the authenticated user from specified cohorts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "achievements"
+                ],
+                "summary": "Get achievements owned by the user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Comma-separated list of cohort IDs",
+                        "name": "cohort_ids",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.achievementResponseDTO"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/achievements/recipients/{recipientID}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves all achievements issued to a specific user from specified cohorts. Requires authentication.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "achievements"
+                ],
+                "summary": "Get achievements of a specific recipient",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID of the achievement recipient",
+                        "name": "recipientID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated list of cohort IDs",
+                        "name": "cohort_ids",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.achievementResponseDTO"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid recipient ID or query parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handlers.achievementResponseDTO": {
+            "type": "object",
+            "properties": {
+                "access_mode": {
+                    "description": "AccessMode the access level/mode for this achievement",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.lookupValueDTO"
+                        }
+                    ]
+                },
+                "additional_detail": {
+                    "description": "AdditionalDetail optional additional information about the achievement",
+                    "type": "string"
+                },
+                "cohort_id": {
+                    "description": "CohortID the ID of the cohort this achievement belongs to",
+                    "type": "integer"
+                },
+                "condition_payload": {
+                    "description": "ConditionPayload optional JSON payload containing condition details",
+                    "type": "object"
+                },
+                "condition_type": {
+                    "description": "ConditionType optional type of condition for automatic issuance",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.lookupValueDTO"
+                        }
+                    ]
+                },
+                "description": {
+                    "description": "Description explaining what the achievement is about",
+                    "type": "string"
+                },
+                "icon_link": {
+                    "description": "IconLink URL pointing to the achievement icon/image",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID unique identifier of the achievement",
+                    "type": "integer"
+                },
+                "issuance_id": {
+                    "description": "IssuanceID optional ID of the issuance record (for personal achievements)",
+                    "type": "integer"
+                },
+                "issuance_kind": {
+                    "description": "IssuanceKind type of issuance (e.g., 'manual', 'automatic')",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.lookupValueDTO"
+                        }
+                    ]
+                },
+                "name": {
+                    "description": "Name of the achievement",
+                    "type": "string"
+                },
+                "owner_id": {
+                    "description": "OwnerID UUID of the user who created/owns this achievement",
+                    "type": "string"
+                },
+                "progress_payload": {
+                    "description": "ProgressPayload optional JSON payload containing progress information",
+                    "type": "object"
+                },
+                "status": {
+                    "description": "Status optional current status of the achievement issuance",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.statusDTO"
+                        }
+                    ]
+                }
+            }
+        },
+        "handlers.createAchievementRequestDTO": {
+            "type": "object"
+        },
+        "handlers.createAchievementResponseDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "ID of the newly created achievement",
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.issueAchievementRequestDTO": {
+            "type": "object",
+            "properties": {
+                "achievement_id": {
+                    "description": "AchievementID the ID of the achievement to issue",
+                    "type": "integer"
+                },
+                "additional_detail": {
+                    "description": "AdditionalDetail optional additional information about the issuance",
+                    "type": "string"
+                },
+                "recipient_id": {
+                    "description": "RecipientID UUID of the user receiving the achievement",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.issueAchievementResponseDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "ID of the created achievement issuance record",
+                    "type": "integer"
+                }
+            }
+        },
+        "handlers.lookupValueDTO": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Code string code of the lookup value",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID unique identifier of the lookup value",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Name human-readable name of the lookup value",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.statusDTO": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Code string code of the status",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID unique identifier of the status",
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

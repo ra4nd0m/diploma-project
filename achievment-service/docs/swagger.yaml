@@ -1,0 +1,354 @@
+basePath: /api/v1
+definitions:
+  handlers.achievementResponseDTO:
+    properties:
+      access_mode:
+        allOf:
+        - $ref: '#/definitions/handlers.lookupValueDTO'
+        description: AccessMode the access level/mode for this achievement
+      additional_detail:
+        description: AdditionalDetail optional additional information about the achievement
+        type: string
+      cohort_id:
+        description: CohortID the ID of the cohort this achievement belongs to
+        type: integer
+      condition_payload:
+        description: ConditionPayload optional JSON payload containing condition details
+        type: object
+      condition_type:
+        allOf:
+        - $ref: '#/definitions/handlers.lookupValueDTO'
+        description: ConditionType optional type of condition for automatic issuance
+      description:
+        description: Description explaining what the achievement is about
+        type: string
+      icon_link:
+        description: IconLink URL pointing to the achievement icon/image
+        type: string
+      id:
+        description: ID unique identifier of the achievement
+        type: integer
+      issuance_id:
+        description: IssuanceID optional ID of the issuance record (for personal achievements)
+        type: integer
+      issuance_kind:
+        allOf:
+        - $ref: '#/definitions/handlers.lookupValueDTO'
+        description: IssuanceKind type of issuance (e.g., 'manual', 'automatic')
+      name:
+        description: Name of the achievement
+        type: string
+      owner_id:
+        description: OwnerID UUID of the user who created/owns this achievement
+        type: string
+      progress_payload:
+        description: ProgressPayload optional JSON payload containing progress information
+        type: object
+      status:
+        allOf:
+        - $ref: '#/definitions/handlers.statusDTO'
+        description: Status optional current status of the achievement issuance
+    type: object
+  handlers.createAchievementRequestDTO:
+    type: object
+  handlers.createAchievementResponseDTO:
+    properties:
+      id:
+        description: ID of the newly created achievement
+        type: integer
+    type: object
+  handlers.issueAchievementRequestDTO:
+    properties:
+      achievement_id:
+        description: AchievementID the ID of the achievement to issue
+        type: integer
+      additional_detail:
+        description: AdditionalDetail optional additional information about the issuance
+        type: string
+      recipient_id:
+        description: RecipientID UUID of the user receiving the achievement
+        type: string
+    type: object
+  handlers.issueAchievementResponseDTO:
+    properties:
+      id:
+        description: ID of the created achievement issuance record
+        type: integer
+    type: object
+  handlers.lookupValueDTO:
+    properties:
+      code:
+        description: Code string code of the lookup value
+        type: string
+      id:
+        description: ID unique identifier of the lookup value
+        type: integer
+      name:
+        description: Name human-readable name of the lookup value
+        type: string
+    type: object
+  handlers.statusDTO:
+    properties:
+      code:
+        description: Code string code of the status
+        type: string
+      id:
+        description: ID unique identifier of the status
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: API Support
+  description: This service manages the creation, issuance, and retrieval of achievements
+    within cohorts
+  termsOfService: http://swagger.io/terms/
+  title: Achievement Service API
+  version: "1.0"
+paths:
+  /api/v1/achievements:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all achievements visible to the authenticated user from
+        specified cohorts
+      parameters:
+      - description: Comma-separated list of cohort IDs
+        in: query
+        name: cohort_ids
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.achievementResponseDTO'
+            type: array
+        "400":
+          description: Invalid query parameters
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List visible achievements
+      tags:
+      - achievements
+    post:
+      consumes:
+      - application/json
+      description: Creates a new achievement in the system. Requires authentication.
+      parameters:
+      - description: Achievement creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createAchievementRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.createAchievementResponseDTO'
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create a new achievement
+      tags:
+      - achievements
+  /api/v1/achievements/issue:
+    post:
+      consumes:
+      - application/json
+      description: Issues (awards) an achievement to a specific user. Requires authentication
+        and proper authorization.
+      parameters:
+      - description: Achievement issuance request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.issueAchievementRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.issueAchievementResponseDTO'
+        "400":
+          description: Invalid request body or recipient ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Method not allowed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Issue an achievement to a recipient
+      tags:
+      - achievements
+  /api/v1/achievements/owned:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all achievements created/owned by the authenticated user
+        from specified cohorts
+      parameters:
+      - description: Comma-separated list of cohort IDs
+        in: query
+        name: cohort_ids
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.achievementResponseDTO'
+            type: array
+        "400":
+          description: Invalid query parameters
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Method not allowed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get achievements owned by the user
+      tags:
+      - achievements
+  /api/v1/achievements/recipients/{recipientID}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all achievements issued to a specific user from specified
+        cohorts. Requires authentication.
+      parameters:
+      - description: UUID of the achievement recipient
+        in: path
+        name: recipientID
+        required: true
+        type: string
+      - description: Comma-separated list of cohort IDs
+        in: query
+        name: cohort_ids
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.achievementResponseDTO'
+            type: array
+        "400":
+          description: Invalid recipient ID or query parameters
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Method not allowed
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get achievements of a specific recipient
+      tags:
+      - achievements
+schemes:
+- http
+- https
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
