@@ -141,11 +141,11 @@ func (h *AchievementHandler) GetAchievements(w http.ResponseWriter, r *http.Requ
 
 // GetOwnedAchievements godoc
 // @Summary Get achievements owned by the user
-// @Description Retrieves all achievements created/owned by the authenticated user from specified cohorts
+// @Description Retrieves achievements created by the authenticated user. If cohort_ids is provided, results are filtered by those cohorts; otherwise returns all owned achievements.
 // @Tags achievements
 // @Accept json
 // @Produce json
-// @Param cohort_ids query string false "Comma-separated list of cohort IDs"
+// @Param cohort_ids query string false "Optional comma-separated list of cohort IDs to filter by"
 // @Success 200 {array} achievementResponseDTO
 // @Failure 400 {object} map[string]string "Invalid query parameters"
 // @Failure 401 {object} map[string]string "Unauthorized"

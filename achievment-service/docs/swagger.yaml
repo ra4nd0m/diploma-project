@@ -49,6 +49,40 @@ definitions:
         description: Status optional current status of the achievement issuance
     type: object
   handlers.createAchievementRequestDTO:
+    properties:
+      cohort_id:
+        description: CohortID the ID of the cohort this achievement belongs to
+        example: 1
+        type: integer
+      condition_payload:
+        description: ConditionPayload optional JSON payload containing condition details
+        type: object
+      condition_type:
+        description: ConditionType optional type of condition for automatic issuance
+        example: assignment_completed
+        type: string
+      description:
+        description: Description explaining what the achievement is about
+        example: Awarded for the first merged PR
+        type: string
+      icon_link:
+        description: IconLink URL pointing to the achievement icon/image
+        example: https://cdn.example.com/achievements/first-commit.png
+        type: string
+      issuance_kind:
+        description: IssuanceKind type of issuance (e.g., 'manual', 'automatic')
+        example: manual
+        type: string
+      name:
+        description: Name of the achievement
+        example: First Commit
+        type: string
+    required:
+    - cohort_id
+    - description
+    - icon_link
+    - issuance_kind
+    - name
     type: object
   handlers.createAchievementResponseDTO:
     properties:
@@ -67,6 +101,9 @@ definitions:
       recipient_id:
         description: RecipientID UUID of the user receiving the achievement
         type: string
+    required:
+    - achievement_id
+    - recipient_id
     type: object
   handlers.issueAchievementResponseDTO:
     properties:
@@ -242,10 +279,11 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieves all achievements created/owned by the authenticated user
-        from specified cohorts
+      description: Retrieves achievements created by the authenticated user. If cohort_ids
+        is provided, results are filtered by those cohorts; otherwise returns all
+        owned achievements.
       parameters:
-      - description: Comma-separated list of cohort IDs
+      - description: Optional comma-separated list of cohort IDs to filter by
         in: query
         name: cohort_ids
         type: string

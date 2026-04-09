@@ -12,19 +12,19 @@ import (
 // createAchievementRequestDTO represents the request payload for creating a new achievement
 type createAchievementRequestDTO struct {
 	// Name of the achievement
-	Name string `json:"name"`
+	Name string `json:"name" binding:"required" example:"First Commit"`
 	// Description explaining what the achievement is about
-	Description string `json:"description"`
+	Description string `json:"description" binding:"required" example:"Awarded for the first merged PR"`
 	// IconLink URL pointing to the achievement icon/image
-	IconLink string `json:"icon_link"`
+	IconLink string `json:"icon_link" binding:"required" example:"https://cdn.example.com/achievements/first-commit.png"`
 	// CohortID the ID of the cohort this achievement belongs to
-	CohortID int64 `json:"cohort_id"`
+	CohortID int64 `json:"cohort_id" binding:"required" example:"1"`
 	// ConditionType optional type of condition for automatic issuance
-	ConditionType *string `json:"condition_type,omitempty"`
+	ConditionType *string `json:"condition_type,omitempty" example:"assignment_completed"`
 	// IssuanceKind type of issuance (e.g., 'manual', 'automatic')
-	IssuanceKind string `json:"issuance_kind"`
+	IssuanceKind string `json:"issuance_kind" binding:"required" example:"manual"`
 	// ConditionPayload optional JSON payload containing condition details
-	ConditionPayload json.RawMessage `json:"condition_payload,omitempty"`
+	ConditionPayload json.RawMessage `json:"condition_payload,omitempty" swaggertype:"object"`
 }
 
 func (d createAchievementRequestDTO) toInput(ownerID uuid.UUID) achievement_creation.Input {
@@ -49,9 +49,9 @@ type createAchievementResponseDTO struct {
 // issueAchievementRequestDTO represents the request payload for issuing an achievement to a user
 type issueAchievementRequestDTO struct {
 	// AchievementID the ID of the achievement to issue
-	AchievementID int64 `json:"achievement_id"`
+	AchievementID int64 `json:"achievement_id" binding:"required"`
 	// RecipientID UUID of the user receiving the achievement
-	RecipientID string `json:"recipient_id"`
+	RecipientID string `json:"recipient_id" binding:"required"`
 	// AdditionalDetail optional additional information about the issuance
 	AdditionalDetail *string `json:"additional_detail,omitempty"`
 }

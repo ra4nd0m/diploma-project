@@ -231,7 +231,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Retrieves all achievements created/owned by the authenticated user from specified cohorts",
+                "description": "Retrieves achievements created by the authenticated user. If cohort_ids is provided, results are filtered by those cohorts; otherwise returns all owned achievements.",
                 "consumes": [
                     "application/json"
                 ],
@@ -245,7 +245,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Comma-separated list of cohort IDs",
+                        "description": "Optional comma-separated list of cohort IDs to filter by",
                         "name": "cohort_ids",
                         "in": "query"
                     }
@@ -461,7 +461,50 @@ const docTemplate = `{
             }
         },
         "handlers.createAchievementRequestDTO": {
-            "type": "object"
+            "type": "object",
+            "required": [
+                "cohort_id",
+                "description",
+                "icon_link",
+                "issuance_kind",
+                "name"
+            ],
+            "properties": {
+                "cohort_id": {
+                    "description": "CohortID the ID of the cohort this achievement belongs to",
+                    "type": "integer",
+                    "example": 1
+                },
+                "condition_payload": {
+                    "description": "ConditionPayload optional JSON payload containing condition details",
+                    "type": "object"
+                },
+                "condition_type": {
+                    "description": "ConditionType optional type of condition for automatic issuance",
+                    "type": "string",
+                    "example": "assignment_completed"
+                },
+                "description": {
+                    "description": "Description explaining what the achievement is about",
+                    "type": "string",
+                    "example": "Awarded for the first merged PR"
+                },
+                "icon_link": {
+                    "description": "IconLink URL pointing to the achievement icon/image",
+                    "type": "string",
+                    "example": "https://cdn.example.com/achievements/first-commit.png"
+                },
+                "issuance_kind": {
+                    "description": "IssuanceKind type of issuance (e.g., 'manual', 'automatic')",
+                    "type": "string",
+                    "example": "manual"
+                },
+                "name": {
+                    "description": "Name of the achievement",
+                    "type": "string",
+                    "example": "First Commit"
+                }
+            }
         },
         "handlers.createAchievementResponseDTO": {
             "type": "object",
@@ -474,6 +517,10 @@ const docTemplate = `{
         },
         "handlers.issueAchievementRequestDTO": {
             "type": "object",
+            "required": [
+                "achievement_id",
+                "recipient_id"
+            ],
             "properties": {
                 "achievement_id": {
                     "description": "AchievementID the ID of the achievement to issue",
