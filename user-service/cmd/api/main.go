@@ -1,3 +1,31 @@
+// Package main implements the User Service API server.
+//
+// @title User Service API
+// @version 1.0
+// @description User and cohort management API service for educational platform
+// @termsOfService http://swagger.io/terms/
+//
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+//
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+//
+// @host localhost:8080
+// @BasePath /
+// @schemes http https
+//
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description JWT Bearer token for authentication
+//
+// @securityDefinitions.apikey InternalToken
+// @in header
+// @name X-Internal-Token
+// @description Internal service token for authentication
+//
+// @x-logo url=https://swagger.io/images/logo.png altText=Logo
 package main
 
 import (

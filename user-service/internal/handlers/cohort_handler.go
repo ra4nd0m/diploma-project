@@ -39,6 +39,18 @@ func NewCohortHandler(cohortService CohortService, inviteTokenParser InviteToken
 	return &CohortHandler{cohortService: cohortService, inviteTokenParser: inviteTokenParser}
 }
 
+// CreateCohort creates a new cohort for the authenticated teacher.
+// @Summary Create a new cohort
+// @Description Creates a new cohort owned by the authenticated teacher. Requires teacher role.
+// @Tags cohorts
+// @Security Bearer []
+// @Param request body dto.CohortCreateRequest true "Cohort creation request"
+// @Success 200 {object} dto.CohortResponse "Cohort created successfully"
+// @Failure 400 {object} map[string]string "Bad request - invalid input or user ID"
+// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
+// @Failure 403 {object} map[string]string "Forbidden - teacher role required"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /cohorts [post]
 func (h *CohortHandler) CreateCohort(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
@@ -82,6 +94,16 @@ func (h *CohortHandler) CreateCohort(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// GetCohorts retrieves all cohorts for the authenticated user.
+// @Summary Get user cohorts
+// @Description Retrieves all cohorts that the authenticated user is a member of or owns
+// @Tags cohorts
+// @Security Bearer []
+// @Success 200 {array} dto.CohortResponse "List of cohorts retrieved successfully"
+// @Failure 400 {object} map[string]string "Bad request - invalid user ID"
+// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /cohorts [get]
 func (h *CohortHandler) GetCohorts(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
@@ -112,6 +134,19 @@ func (h *CohortHandler) GetCohorts(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// GetCohortMembers retrieves all members of a specific cohort.
+// @Summary Get cohort members
+// @Description Retrieves all members of a cohort. User must be the cohort owner or a member.
+// @Tags cohorts
+// @Security Bearer []
+// @Param id path string true "Cohort ID"
+// @Success 200 {object} dto.CohortWithUsersResponse "Cohort with members retrieved successfully"
+// @Failure 400 {object} map[string]string "Bad request - invalid cohort ID or user ID"
+// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
+// @Failure 403 {object} map[string]string "Forbidden - user is not a member or owner"
+// @Failure 404 {object} map[string]string "Not found - cohort does not exist"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /cohorts/{id}/members [get]
 func (h *CohortHandler) GetCohortMembers(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
@@ -175,6 +210,18 @@ func (h *CohortHandler) GetCohortMembers(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// JoinCohort allows a user to join a cohort using an invite token.
+// @Summary Join a cohort
+// @Description Joins a cohort using a valid invite token. Teachers cannot join cohorts.
+// @Tags cohorts
+// @Security Bearer []
+// @Param request body dto.CohortJoinRequest true "Join cohort request with invite token"
+// @Success 200 {object} map[string]string "Cohort joined successfully, returns cohort_id"
+// @Failure 400 {object} map[string]string "Bad request - invalid token or user ID"
+// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
+// @Failure 403 {object} map[string]string "Forbidden - teachers cannot join cohorts"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /cohorts/join [post]
 func (h *CohortHandler) JoinCohort(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
@@ -228,6 +275,18 @@ func (h *CohortHandler) JoinCohort(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"cohort_id": strconv.FormatInt(cohortID, 10)})
 }
 
+// GenerateInviteToken generates an invite token for a cohort.
+// @Summary Generate invite token
+// @Description Generates a new invite token for a cohort. Only the cohort owner can generate tokens.
+// @Tags cohorts
+// @Security Bearer []
+// @Param id path string true "Cohort ID"
+// @Success 200 {object} map[string]string "Invite token generated successfully, returns token"
+// @Failure 400 {object} map[string]string "Bad request - invalid cohort ID or user ID"
+// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
+// @Failure 403 {object} map[string]string "Forbidden - only cohort owner can generate tokens"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /cohorts/{id}/invite [post]
 func (h *CohortHandler) GenerateInviteToken(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
@@ -267,6 +326,16 @@ func (h *CohortHandler) GenerateInviteToken(w http.ResponseWriter, r *http.Reque
 	writeJSON(w, http.StatusOK, map[string]string{"token": token})
 }
 
+// IsOwner checks if a user owns a cohort (internal endpoint).
+// @Summary Check cohort ownership
+// @Description Internal endpoint to check if a user owns a specific cohort. Requires internal token authentication.
+// @Tags cohorts
+// @Security InternalToken []
+// @Param request body dto.CohortIsOwnedRequest true "Ownership check request"
+// @Success 200 {object} map[string]bool "Ownership status returned as is_owner boolean"
+// @Failure 400 {object} map[string]string "Bad request - invalid cohort ID or user ID"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /internal/cohorts/can-edit [post]
 func (h *CohortHandler) IsOwner(w http.ResponseWriter, r *http.Request) {
 	var req dto.CohortIsOwnedRequest
 
@@ -299,6 +368,16 @@ func (h *CohortHandler) IsOwner(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]bool{"is_owner": isOwner})
 }
 
+// IsUserIn checks if a user is a member of any specified cohorts (internal endpoint).
+// @Summary Check user cohort membership
+// @Description Internal endpoint to check which of the specified cohorts a user is a member of. Requires internal token authentication.
+// @Tags cohorts
+// @Security InternalToken []
+// @Param request body dto.CohortIsUserInRequest true "Membership check request with user ID and cohort IDs"
+// @Success 200 {object} dto.CohortIsUserInResponse "List of cohort IDs the user is a member of"
+// @Failure 400 {object} map[string]string "Bad request - invalid user ID or cohort IDs"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /internal/cohorts/is-user-in [post]
 func (h *CohortHandler) IsUserIn(w http.ResponseWriter, r *http.Request) {
 	var req dto.CohortIsUserInRequest
 

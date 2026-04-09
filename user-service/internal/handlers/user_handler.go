@@ -24,6 +24,16 @@ func NewUserHandler(userService UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
+// GetMeContext retrieves the current authenticated user's profile information.
+// @Summary Get current user profile
+// @Description Retrieves the authenticated user's profile including ID, display name, and preferences
+// @Tags users
+// @Security Bearer []
+// @Success 200 {object} dto.UserResponse "User profile retrieved successfully"
+// @Failure 401 {object} map[string]string "Unauthorized - missing or invalid token"
+// @Failure 400 {object} map[string]string "Bad request - invalid user ID"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /me [get]
 func (h *UserHandler) GetMeContext(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
