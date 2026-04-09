@@ -6,8 +6,11 @@ import (
 	"user-service/internal/handlers"
 	authmiddleware "user-service/internal/middleware"
 
+	_ "user-service/docs"
+
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 func NewRouter(
@@ -27,6 +30,10 @@ func NewRouter(
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	auth := authmiddleware.NewAuthMiddleware(authManager)
 	internalTokenValidator := authmiddleware.NewInternalTokenMiddleware(internalToken)
