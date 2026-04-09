@@ -79,7 +79,7 @@ func (h *AchievementHandler) Achievements(w http.ResponseWriter, r *http.Request
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Security Bearer
-// @Router /api/v1/achievements [post]
+// @Router /achievements [post]
 func (h *AchievementHandler) CreateAchievement(w http.ResponseWriter, r *http.Request) {
 	var req createAchievementRequestDTO
 	if err := decodeJSON(r, &req); err != nil {
@@ -116,7 +116,7 @@ func (h *AchievementHandler) CreateAchievement(w http.ResponseWriter, r *http.Re
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Security Bearer
-// @Router /api/v1/achievements [get]
+// @Router /achievements [get]
 func (h *AchievementHandler) GetAchievements(w http.ResponseWriter, r *http.Request) {
 	userID, err := userIDFromClaims(r.Context())
 	if err != nil {
@@ -152,7 +152,7 @@ func (h *AchievementHandler) GetAchievements(w http.ResponseWriter, r *http.Requ
 // @Failure 405 {object} map[string]string "Method not allowed"
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Security Bearer
-// @Router /api/v1/achievements/owned [get]
+// @Router /achievements/owned [get]
 func (h *AchievementHandler) GetOwnedAchievements(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeMethodNotAllowed(w, http.MethodGet)
@@ -194,7 +194,7 @@ func (h *AchievementHandler) GetOwnedAchievements(w http.ResponseWriter, r *http
 // @Failure 405 {object} map[string]string "Method not allowed"
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Security Bearer
-// @Router /api/v1/achievements/recipients/{recipientID} [get]
+// @Router /achievements/recipient/{recipientID} [get]
 func (h *AchievementHandler) GetRecipientAchievements(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeMethodNotAllowed(w, http.MethodGet)
@@ -241,7 +241,7 @@ func (h *AchievementHandler) GetRecipientAchievements(w http.ResponseWriter, r *
 // @Failure 405 {object} map[string]string "Method not allowed"
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Security Bearer
-// @Router /api/v1/achievements/issue [post]
+// @Router /achievements/issue [post]
 func (h *AchievementHandler) IssueAchievement(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeMethodNotAllowed(w, http.MethodPost)

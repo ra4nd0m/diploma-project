@@ -19,7 +19,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/achievements": {
+        "/achievements": {
             "get": {
                 "security": [
                     {
@@ -149,7 +149,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/achievements/issue": {
+        "/achievements/issue": {
             "post": {
                 "security": [
                     {
@@ -224,7 +224,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/achievements/owned": {
+        "/achievements/owned": {
             "get": {
                 "security": [
                     {
@@ -299,7 +299,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/achievements/recipients/{recipientID}": {
+        "/achievements/recipient/{recipientID}": {
             "get": {
                 "security": [
                     {
@@ -543,7 +543,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/api/v1",
+	BasePath:         "",
 	Schemes:          []string{"http", "https"},
 	Title:            "Achievement Service API",
 	Description:      "This service manages the creation, issuance, and retrieval of achievements within cohorts",

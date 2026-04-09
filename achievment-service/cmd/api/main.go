@@ -7,7 +7,6 @@
 // @termsOfService http://swagger.io/terms/
 // @contact.name API Support
 // @host localhost:8080
-// @basePath /api/v1
 // @schemes http https
 // @securityDefinitions.apikey Bearer
 // @in header

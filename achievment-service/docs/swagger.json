@@ -14,9 +14,8 @@
         "version": "1.0"
     },
     "host": "localhost:8080",
-    "basePath": "/api/v1",
     "paths": {
-        "/api/v1/achievements": {
+        "/achievements": {
             "get": {
                 "security": [
                     {
@@ -146,7 +145,7 @@
                 }
             }
         },
-        "/api/v1/achievements/issue": {
+        "/achievements/issue": {
             "post": {
                 "security": [
                     {
@@ -221,7 +220,7 @@
                 }
             }
         },
-        "/api/v1/achievements/owned": {
+        "/achievements/owned": {
             "get": {
                 "security": [
                     {
@@ -296,7 +295,7 @@
                 }
             }
         },
-        "/api/v1/achievements/recipients/{recipientID}": {
+        "/achievements/recipient/{recipientID}": {
             "get": {
                 "security": [
                     {

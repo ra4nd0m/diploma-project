@@ -1,4 +1,3 @@
-basePath: /api/v1
 definitions:
   handlers.achievementResponseDTO:
     properties:
@@ -106,7 +105,7 @@ info:
   title: Achievement Service API
   version: "1.0"
 paths:
-  /api/v1/achievements:
+  /achievements:
     get:
       consumes:
       - application/json
@@ -190,7 +189,7 @@ paths:
       summary: Create a new achievement
       tags:
       - achievements
-  /api/v1/achievements/issue:
+  /achievements/issue:
     post:
       consumes:
       - application/json
@@ -239,7 +238,7 @@ paths:
       summary: Issue an achievement to a recipient
       tags:
       - achievements
-  /api/v1/achievements/owned:
+  /achievements/owned:
     get:
       consumes:
       - application/json
@@ -288,7 +287,7 @@ paths:
       summary: Get achievements owned by the user
       tags:
       - achievements
-  /api/v1/achievements/recipients/{recipientID}:
+  /achievements/recipient/{recipientID}:
     get:
       consumes:
       - application/json
