@@ -1,0 +1,677 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "User and cohort management API service for educational platform",
+        "title": "User Service API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/cohorts": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer ": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "Retrieves all cohorts that the authenticated user is a member of or owns",
+                "tags": [
+                    "cohorts"
+                ],
+                "summary": "Get user cohorts",
+                "responses": {
+                    "200": {
+                        "description": "List of cohorts retrieved successfully",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.CohortResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid user ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - missing or invalid token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer ": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "Creates a new cohort owned by the authenticated teacher. Requires teacher role.",
+                "tags": [
+                    "cohorts"
+                ],
+                "summary": "Create a new cohort",
+                "parameters": [
+                    {
+                        "description": "Cohort creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CohortCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cohort created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CohortResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid input or user ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - missing or invalid token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - teacher role required",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cohorts/join": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer ": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "Joins a cohort using a valid invite token. Teachers cannot join cohorts.",
+                "tags": [
+                    "cohorts"
+                ],
+                "summary": "Join a cohort",
+                "parameters": [
+                    {
+                        "description": "Join cohort request with invite token",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CohortJoinRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cohort joined successfully, returns cohort_id",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid token or user ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - missing or invalid token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - teachers cannot join cohorts",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cohorts/{id}/invite": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer ": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "Generates a new invite token for a cohort. Only the cohort owner can generate tokens.",
+                "tags": [
+                    "cohorts"
+                ],
+                "summary": "Generate invite token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cohort ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invite token generated successfully, returns token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid cohort ID or user ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - missing or invalid token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - only cohort owner can generate tokens",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cohorts/{id}/members": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer ": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "Retrieves all members of a cohort. User must be the cohort owner or a member.",
+                "tags": [
+                    "cohorts"
+                ],
+                "summary": "Get cohort members",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cohort ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cohort with members retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CohortWithUsersResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid cohort ID or user ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - missing or invalid token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - user is not a member or owner",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - cohort does not exist",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/internal/cohorts/can-edit": {
+            "post": {
+                "security": [
+                    {
+                        "InternalToken ": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "Internal endpoint to check if a user owns a specific cohort. Requires internal token authentication.",
+                "tags": [
+                    "cohorts"
+                ],
+                "summary": "Check cohort ownership",
+                "parameters": [
+                    {
+                        "description": "Ownership check request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CohortIsOwnedRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ownership status returned as is_owner boolean",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid cohort ID or user ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/internal/cohorts/is-user-in": {
+            "post": {
+                "security": [
+                    {
+                        "InternalToken ": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "Internal endpoint to check which of the specified cohorts a user is a member of. Requires internal token authentication.",
+                "tags": [
+                    "cohorts"
+                ],
+                "summary": "Check user cohort membership",
+                "parameters": [
+                    {
+                        "description": "Membership check request with user ID and cohort IDs",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CohortIsUserInRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of cohort IDs the user is a member of",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CohortIsUserInResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid user ID or cohort IDs",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer ": [
+                            ""
+                        ]
+                    }
+                ],
+                "description": "Retrieves the authenticated user's profile including ID, display name, and preferences",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get current user profile",
+                "responses": {
+                    "200": {
+                        "description": "User profile retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid user ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - missing or invalid token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.CohortCreateRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "Advanced Mathematics"
+                }
+            }
+        },
+        "dto.CohortIsOwnedRequest": {
+            "type": "object",
+            "required": [
+                "cohort_id",
+                "user_id"
+            ],
+            "properties": {
+                "cohort_id": {
+                    "type": "string",
+                    "example": "123"
+                },
+                "user_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "dto.CohortIsUserInRequest": {
+            "type": "object",
+            "required": [
+                "cohort_ids",
+                "user_id"
+            ],
+            "properties": {
+                "cohort_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "example": [
+                        1,
+                        2,
+                        3
+                    ]
+                },
+                "user_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "dto.CohortIsUserInResponse": {
+            "type": "object",
+            "properties": {
+                "cohort_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "example": [
+                        1,
+                        2
+                    ]
+                }
+            }
+        },
+        "dto.CohortJoinRequest": {
+            "type": "object",
+            "required": [
+                "token"
+            ],
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "dto.CohortResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "123"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Advanced Mathematics"
+                }
+            }
+        },
+        "dto.CohortWithUsersResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "123"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Advanced Mathematics"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.UserResponse"
+                    }
+                }
+            }
+        },
+        "dto.UserResponse": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "preferences": {
+                    "type": "object"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "description": "JWT Bearer token for authentication",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
+        "InternalToken": {
+            "description": "Internal service token for authentication",
+            "type": "apiKey",
+            "name": "X-Internal-Token",
+            "in": "header",
+            "x-logo": "url=https://swagger.io/images/logo.png altText=Logo"
+        }
+    }
+}
