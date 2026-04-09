@@ -114,7 +114,7 @@ type achievementResponseDTO struct {
 	// ConditionType optional type of condition for automatic issuance
 	ConditionType *lookupValueDTO `json:"condition_type,omitempty"`
 	// ConditionPayload optional JSON payload containing condition details
-	ConditionPayload json.RawMessage `json:"condition_payload,omitempty"`
+	ConditionPayload json.RawMessage `json:"condition_payload,omitempty" swaggertype:"object"`
 	// IssuanceID optional ID of the issuance record (for personal achievements)
 	IssuanceID *int64 `json:"issuance_id,omitempty"`
 	// Status optional current status of the achievement issuance
@@ -122,7 +122,7 @@ type achievementResponseDTO struct {
 	// AdditionalDetail optional additional information about the achievement
 	AdditionalDetail *string `json:"additional_detail,omitempty"`
 	// ProgressPayload optional JSON payload containing progress information
-	ProgressPayload json.RawMessage `json:"progress_payload,omitempty"`
+	ProgressPayload json.RawMessage `json:"progress_payload,omitempty" swaggertype:"object"`
 }
 
 // statusDTO represents the status of an achievement issuance
