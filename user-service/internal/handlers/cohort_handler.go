@@ -1,3 +1,12 @@
+// Package handlers contains HTTP request handlers for the User Service API.
+//
+// This package implements the HTTP handlers for user and cohort-related endpoints.
+// Handlers are organized by domain:
+//   - cohort_handler.go: Cohort management and membership operations
+//   - user_handler.go: User profile operations
+//   - respond.go: Helper functions for HTTP responses
+//
+// All handlers use middleware-provided claims for authentication and authorization.
 package handlers
 
 import (
@@ -16,6 +25,7 @@ import (
 
 const teacherRole = "teacher"
 
+// CohortService defines the interface for cohort business logic operations.
 type CohortService interface {
 	CreateCohort(ctx context.Context, name string, ownerID uuid.UUID) (*models.Cohort, error)
 	GetCohorts(ctx context.Context, userID uuid.UUID) ([]*models.Cohort, error)
@@ -26,19 +36,38 @@ type CohortService interface {
 	IsUserInCohorts(ctx context.Context, userID uuid.UUID, cohortIDs []int64) ([]int64, error)
 }
 
+// InviteTokenParser defines the interface for parsing and validating invite tokens.
 type InviteTokenParser interface {
 	ParseInviteToken(tokenStr string) (*security.InviteClaims, error)
 }
 
+// CohortHandler handles HTTP requests related to cohort operations including creation,
+// listing, membership management, and invite token generation.
+// It requires a CohortService for business logic and an InviteTokenParser for token validation.
 type CohortHandler struct {
 	cohortService     CohortService
 	inviteTokenParser InviteTokenParser
 }
 
+// NewCohortHandler creates a new CohortHandler with the provided service dependencies.
 func NewCohortHandler(cohortService CohortService, inviteTokenParser InviteTokenParser) *CohortHandler {
 	return &CohortHandler{cohortService: cohortService, inviteTokenParser: inviteTokenParser}
 }
 
+// CreateCohort creates a cohort for the authenticated teacher.
+// @Summary Create cohort
+// @Description Creates a new cohort owned by the authenticated teacher.
+// @Tags cohorts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param req body dto.CohortCreateRequest true "Create cohort request"
+// @Success 200 {object} dto.CohortResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /cohorts [post]
 func (h *CohortHandler) CreateCohort(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
@@ -82,6 +111,17 @@ func (h *CohortHandler) CreateCohort(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// GetCohorts returns cohorts visible to the authenticated user.
+// @Summary List cohorts
+// @Description Returns the list of cohorts available to the authenticated user.
+// @Tags cohorts
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} dto.CohortResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /cohorts [get]
 func (h *CohortHandler) GetCohorts(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
@@ -112,6 +152,20 @@ func (h *CohortHandler) GetCohorts(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// GetCohortMembers returns cohort members if the user has access.
+// @Summary Get cohort members
+// @Description Returns cohort details and members if the authenticated user is the owner or a member.
+// @Tags cohorts
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Cohort ID"
+// @Success 200 {object} dto.CohortWithUsersResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /cohorts/{id}/members [get]
 func (h *CohortHandler) GetCohortMembers(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
@@ -175,6 +229,20 @@ func (h *CohortHandler) GetCohortMembers(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// JoinCohort joins the authenticated student to a cohort using an invite token.
+// @Summary Join cohort
+// @Description Joins the authenticated user to a cohort identified by an invite token.
+// @Tags cohorts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param req body dto.CohortJoinRequest true "Join cohort request"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /cohorts/join [post]
 func (h *CohortHandler) JoinCohort(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
@@ -228,6 +296,19 @@ func (h *CohortHandler) JoinCohort(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"cohort_id": strconv.FormatInt(cohortID, 10)})
 }
 
+// GenerateInviteToken creates an invite token for a cohort owned by the user.
+// @Summary Generate invite token
+// @Description Generates an invite token for a cohort owned by the authenticated user.
+// @Tags cohorts
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Cohort ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /cohorts/{id}/invite [post]
 func (h *CohortHandler) GenerateInviteToken(w http.ResponseWriter, r *http.Request) {
 	claims, ok := middleware.ClaimsFromContext(r.Context())
 	if !ok {
@@ -267,6 +348,18 @@ func (h *CohortHandler) GenerateInviteToken(w http.ResponseWriter, r *http.Reque
 	writeJSON(w, http.StatusOK, map[string]string{"token": token})
 }
 
+// IsOwner checks whether a user owns a cohort.
+// @Summary Check cohort ownership
+// @Description Checks whether the supplied user owns the supplied cohort.
+// @Tags internal
+// @Accept json
+// @Produce json
+// @Security InternalToken
+// @Param req body dto.CohortIsOwnedRequest true "Ownership check request"
+// @Success 200 {object} map[string]bool
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /internal/cohorts/can-edit [post]
 func (h *CohortHandler) IsOwner(w http.ResponseWriter, r *http.Request) {
 	var req dto.CohortIsOwnedRequest
 
@@ -299,6 +392,18 @@ func (h *CohortHandler) IsOwner(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]bool{"is_owner": isOwner})
 }
 
+// IsUserIn checks whether a user belongs to any of the supplied cohorts.
+// @Summary Check cohort membership
+// @Description Checks whether the supplied user belongs to any of the supplied cohorts.
+// @Tags internal
+// @Accept json
+// @Produce json
+// @Security InternalToken
+// @Param req body dto.CohortIsUserInRequest true "Membership check request"
+// @Success 200 {object} dto.CohortIsUserInResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /internal/cohorts/is-user-in [post]
 func (h *CohortHandler) IsUserIn(w http.ResponseWriter, r *http.Request) {
 	var req dto.CohortIsUserInRequest
 
