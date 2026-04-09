@@ -9,13 +9,21 @@ import (
 	"github.com/google/uuid"
 )
 
+// createAchievementRequestDTO represents the request payload for creating a new achievement
 type createAchievementRequestDTO struct {
-	Name             string          `json:"name"`
-	Description      string          `json:"description"`
-	IconLink         string          `json:"icon_link"`
-	CohortID         int64           `json:"cohort_id"`
-	ConditionType    *string         `json:"condition_type,omitempty"`
-	IssuanceKind     string          `json:"issuance_kind"`
+	// Name of the achievement
+	Name string `json:"name"`
+	// Description explaining what the achievement is about
+	Description string `json:"description"`
+	// IconLink URL pointing to the achievement icon/image
+	IconLink string `json:"icon_link"`
+	// CohortID the ID of the cohort this achievement belongs to
+	CohortID int64 `json:"cohort_id"`
+	// ConditionType optional type of condition for automatic issuance
+	ConditionType *string `json:"condition_type,omitempty"`
+	// IssuanceKind type of issuance (e.g., 'manual', 'automatic')
+	IssuanceKind string `json:"issuance_kind"`
+	// ConditionPayload optional JSON payload containing condition details
 	ConditionPayload json.RawMessage `json:"condition_payload,omitempty"`
 }
 
@@ -32,13 +40,19 @@ func (d createAchievementRequestDTO) toInput(ownerID uuid.UUID) achievement_crea
 	}
 }
 
+// createAchievementResponseDTO contains the response after creating an achievement
 type createAchievementResponseDTO struct {
+	// ID of the newly created achievement
 	ID int64 `json:"id"`
 }
 
+// issueAchievementRequestDTO represents the request payload for issuing an achievement to a user
 type issueAchievementRequestDTO struct {
-	AchievementID    int64   `json:"achievement_id"`
-	RecipientID      string  `json:"recipient_id"`
+	// AchievementID the ID of the achievement to issue
+	AchievementID int64 `json:"achievement_id"`
+	// RecipientID UUID of the user receiving the achievement
+	RecipientID string `json:"recipient_id"`
+	// AdditionalDetail optional additional information about the issuance
 	AdditionalDetail *string `json:"additional_detail,omitempty"`
 }
 
@@ -56,7 +70,9 @@ func (d issueAchievementRequestDTO) toInput(issuerID uuid.UUID) (achievementissu
 	}, nil
 }
 
+// issueAchievementResponseDTO contains the response after issuing an achievement
 type issueAchievementResponseDTO struct {
+	// ID of the created achievement issuance record
 	ID int64 `json:"id"`
 }
 
@@ -67,31 +83,53 @@ func issueAchievementResponseFromOutput(out *achievementissue.Output) issueAchie
 	return issueAchievementResponseDTO{ID: out.ID}
 }
 
+// lookupValueDTO represents a reference to a lookup table entry (e.g., status, type, kind)
 type lookupValueDTO struct {
-	ID   int64  `json:"id"`
+	// ID unique identifier of the lookup value
+	ID int64 `json:"id"`
+	// Code string code of the lookup value
 	Code string `json:"code"`
+	// Name human-readable name of the lookup value
 	Name string `json:"name"`
 }
 
+// achievementResponseDTO contains detailed information about an achievement
 type achievementResponseDTO struct {
-	ID               int64           `json:"id"`
-	Name             string          `json:"name"`
-	Description      string          `json:"description"`
-	IconLink         string          `json:"icon_link"`
-	CohortID         int64           `json:"cohort_id"`
-	OwnerID          string          `json:"owner_id"`
-	AccessMode       lookupValueDTO  `json:"access_mode"`
-	IssuanceKind     lookupValueDTO  `json:"issuance_kind"`
-	ConditionType    *lookupValueDTO `json:"condition_type,omitempty"`
+	// ID unique identifier of the achievement
+	ID int64 `json:"id"`
+	// Name of the achievement
+	Name string `json:"name"`
+	// Description explaining what the achievement is about
+	Description string `json:"description"`
+	// IconLink URL pointing to the achievement icon/image
+	IconLink string `json:"icon_link"`
+	// CohortID the ID of the cohort this achievement belongs to
+	CohortID int64 `json:"cohort_id"`
+	// OwnerID UUID of the user who created/owns this achievement
+	OwnerID string `json:"owner_id"`
+	// AccessMode the access level/mode for this achievement
+	AccessMode lookupValueDTO `json:"access_mode"`
+	// IssuanceKind type of issuance (e.g., 'manual', 'automatic')
+	IssuanceKind lookupValueDTO `json:"issuance_kind"`
+	// ConditionType optional type of condition for automatic issuance
+	ConditionType *lookupValueDTO `json:"condition_type,omitempty"`
+	// ConditionPayload optional JSON payload containing condition details
 	ConditionPayload json.RawMessage `json:"condition_payload,omitempty"`
-	IssuanceID       *int64          `json:"issuance_id,omitempty"`
-	Status           *statusDTO      `json:"status,omitempty"`
-	AdditionalDetail *string         `json:"additional_detail,omitempty"`
-	ProgressPayload  json.RawMessage `json:"progress_payload,omitempty"`
+	// IssuanceID optional ID of the issuance record (for personal achievements)
+	IssuanceID *int64 `json:"issuance_id,omitempty"`
+	// Status optional current status of the achievement issuance
+	Status *statusDTO `json:"status,omitempty"`
+	// AdditionalDetail optional additional information about the achievement
+	AdditionalDetail *string `json:"additional_detail,omitempty"`
+	// ProgressPayload optional JSON payload containing progress information
+	ProgressPayload json.RawMessage `json:"progress_payload,omitempty"`
 }
 
+// statusDTO represents the status of an achievement issuance
 type statusDTO struct {
-	ID   int64  `json:"id"`
+	// ID unique identifier of the status
+	ID int64 `json:"id"`
+	// Code string code of the status
 	Code string `json:"code"`
 }
 

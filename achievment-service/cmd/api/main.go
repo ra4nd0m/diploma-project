@@ -1,3 +1,18 @@
+// Package main is the entry point for the Achievement Service API.
+//
+// Achievement Service
+// @title Achievement Service API
+// @version 1.0
+// @description This service manages the creation, issuance, and retrieval of achievements within cohorts
+// @termsOfService http://swagger.io/terms/
+// @contact.name API Support
+// @host localhost:8080
+// @basePath /api/v1
+// @schemes http https
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 package main
 
 import (
@@ -19,6 +34,14 @@ import (
 	"os"
 )
 
+// main initializes and starts the Achievement Service API server.
+// It performs the following steps:
+// 1. Loads configuration from environment variables
+// 2. Initializes structured logging
+// 3. Connects to the database and runs migrations
+// 4. Initializes repository, service, and handler layers
+// 5. Sets up middleware and routes
+// 6. Starts the HTTP server
 func main() {
 	cfg, err := config.Load()
 	if err != nil {

@@ -49,6 +49,13 @@ func NewAchievementHandler(
 	}
 }
 
+// Achievements godoc
+// @Summary List or create achievements
+// @Description Handles both POST (create new achievement) and GET (list visible achievements) requests
+// @Tags achievements
+// @Accept json
+// @Produce json
+// @Security Bearer
 func (h *AchievementHandler) Achievements(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
@@ -60,6 +67,19 @@ func (h *AchievementHandler) Achievements(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// CreateAchievement godoc
+// @Summary Create a new achievement
+// @Description Creates a new achievement in the system. Requires authentication.
+// @Tags achievements
+// @Accept json
+// @Produce json
+// @Param request body createAchievementRequestDTO true "Achievement creation request"
+// @Success 201 {object} createAchievementResponseDTO
+// @Failure 400 {object} map[string]string "Invalid request body"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
+// @Router /api/v1/achievements [post]
 func (h *AchievementHandler) CreateAchievement(w http.ResponseWriter, r *http.Request) {
 	var req createAchievementRequestDTO
 	if err := decodeJSON(r, &req); err != nil {
@@ -84,6 +104,19 @@ func (h *AchievementHandler) CreateAchievement(w http.ResponseWriter, r *http.Re
 	writeJSON(w, http.StatusCreated, createAchievementResponseDTO{ID: id})
 }
 
+// GetAchievements godoc
+// @Summary List visible achievements
+// @Description Retrieves all achievements visible to the authenticated user from specified cohorts
+// @Tags achievements
+// @Accept json
+// @Produce json
+// @Param cohort_ids query string false "Comma-separated list of cohort IDs"
+// @Success 200 {array} achievementResponseDTO
+// @Failure 400 {object} map[string]string "Invalid query parameters"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
+// @Router /api/v1/achievements [get]
 func (h *AchievementHandler) GetAchievements(w http.ResponseWriter, r *http.Request) {
 	userID, err := userIDFromClaims(r.Context())
 	if err != nil {
@@ -106,6 +139,20 @@ func (h *AchievementHandler) GetAchievements(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, achievementsResponseFromOutput(items))
 }
 
+// GetOwnedAchievements godoc
+// @Summary Get achievements owned by the user
+// @Description Retrieves all achievements created/owned by the authenticated user from specified cohorts
+// @Tags achievements
+// @Accept json
+// @Produce json
+// @Param cohort_ids query string false "Comma-separated list of cohort IDs"
+// @Success 200 {array} achievementResponseDTO
+// @Failure 400 {object} map[string]string "Invalid query parameters"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 405 {object} map[string]string "Method not allowed"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
+// @Router /api/v1/achievements/owned [get]
 func (h *AchievementHandler) GetOwnedAchievements(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeMethodNotAllowed(w, http.MethodGet)
@@ -133,6 +180,21 @@ func (h *AchievementHandler) GetOwnedAchievements(w http.ResponseWriter, r *http
 	writeJSON(w, http.StatusOK, achievementsResponseFromOutput(items))
 }
 
+// GetRecipientAchievements godoc
+// @Summary Get achievements of a specific recipient
+// @Description Retrieves all achievements issued to a specific user from specified cohorts. Requires authentication.
+// @Tags achievements
+// @Accept json
+// @Produce json
+// @Param recipientID path string true "UUID of the achievement recipient"
+// @Param cohort_ids query string false "Comma-separated list of cohort IDs"
+// @Success 200 {array} achievementResponseDTO
+// @Failure 400 {object} map[string]string "Invalid recipient ID or query parameters"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 405 {object} map[string]string "Method not allowed"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
+// @Router /api/v1/achievements/recipients/{recipientID} [get]
 func (h *AchievementHandler) GetRecipientAchievements(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeMethodNotAllowed(w, http.MethodGet)
@@ -166,6 +228,20 @@ func (h *AchievementHandler) GetRecipientAchievements(w http.ResponseWriter, r *
 	writeJSON(w, http.StatusOK, achievementsResponseFromOutput(items))
 }
 
+// IssueAchievement godoc
+// @Summary Issue an achievement to a recipient
+// @Description Issues (awards) an achievement to a specific user. Requires authentication and proper authorization.
+// @Tags achievements
+// @Accept json
+// @Produce json
+// @Param request body issueAchievementRequestDTO true "Achievement issuance request"
+// @Success 201 {object} issueAchievementResponseDTO
+// @Failure 400 {object} map[string]string "Invalid request body or recipient ID"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 405 {object} map[string]string "Method not allowed"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
+// @Router /api/v1/achievements/issue [post]
 func (h *AchievementHandler) IssueAchievement(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeMethodNotAllowed(w, http.MethodPost)
