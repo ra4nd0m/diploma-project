@@ -3,6 +3,7 @@ using AuthService.Data;
 using AuthService.Models;
 using AuthService.Services;
 using AuthService.Utils;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -222,6 +223,47 @@ public static class AuthRoutes
         .WithName("LogoutUser")
         .WithSummary("Log out the current user")
         .WithDescription("Revokes the refresh token cookie if present and ends the current session.")
+        .WithTags("Auth");
+
+        app.MapGet("/me", async (ClaimsPrincipal principal, AuthDbContext dbContext) =>
+        {
+            try
+            {
+                var userId = principal.FindFirstValue("sub");
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var user = await dbContext.Users
+                    .Include(u => u.Role)
+                    .FirstOrDefaultAsync(u => u.Id == userId);
+
+                if (user is null || string.IsNullOrWhiteSpace(user.Email))
+                {
+                    return Results.Unauthorized();
+                }
+
+                return Results.Ok(new MeResponseDto(
+                    user.Id,
+                    user.Email,
+                    user.DisplayName,
+                    user.SchoolName,
+                    user.Role.Name));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to fetch profile info for current user");
+                return Results.StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        })
+        .RequireAuthorization()
+        .Produces<MeResponseDto>(StatusCodes.Status200OK, "application/json")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces(StatusCodes.Status500InternalServerError)
+        .WithName("GetCurrentUser")
+        .WithSummary("Get current user profile")
+        .WithDescription("Returns profile and role information for the authenticated user.")
         .WithTags("Auth");
     }
 
