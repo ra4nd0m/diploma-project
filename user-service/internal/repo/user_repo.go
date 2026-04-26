@@ -21,7 +21,7 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 
 func (r *UserRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, bool, error) {
 	const query = `
-		SELECT id, preferences
+		SELECT id, display_name, preferences
 		FROM "user"
 		WHERE id = $1
 	`
@@ -29,6 +29,7 @@ func (r *UserRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User,
 	var user models.User
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID,
+		&user.DisplayName,
 		&user.Preferences,
 	)
 	if err != nil {

@@ -14,6 +14,7 @@ type CohortRepo interface {
 	GetCohortByOwnerID(ctx context.Context, ownerID uuid.UUID) ([]*models.Cohort, error)
 	GetCohortByID(ctx context.Context, id int64) (*models.CohortWithUsers, bool, error)
 	AddUserToCohort(ctx context.Context, cohortID int64, userID uuid.UUID) error
+	RemoveUserFromCohort(ctx context.Context, cohortID int64, userID uuid.UUID) error
 	GetCohortListByUser(ctx context.Context, userID uuid.UUID) ([]*models.Cohort, error)
 	GetUserMembershipCohortIDs(ctx context.Context, userID uuid.UUID, cohortIDs []int64) ([]int64, error)
 }
@@ -72,6 +73,15 @@ func (s *CohortService) AddsUserToCohortByInvite(ctx context.Context, cohortID i
 	if err != nil {
 		return fmt.Errorf("add user to cohort %w", err)
 	}
+	return nil
+}
+
+func (s *CohortService) RemoveUserFromCohort(ctx context.Context, cohortID int64, userID uuid.UUID) error {
+	err := s.cohorts.RemoveUserFromCohort(ctx, cohortID, userID)
+	if err != nil {
+		return fmt.Errorf("remove user from cohort %w", err)
+	}
+
 	return nil
 }
 

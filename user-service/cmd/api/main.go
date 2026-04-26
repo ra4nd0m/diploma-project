@@ -14,7 +14,7 @@
 // # Authentication
 //
 // Protected endpoints require a Bearer token in the Authorization header.
-// Internal endpoints require an Internal-Token header for inter-service communication.
+// Internal endpoints require an X-Internal-Token header for inter-service communication.
 //
 // # Database
 //
@@ -30,7 +30,7 @@
 // @name Authorization
 // @securityDefinitions.apikey InternalToken
 // @in header
-// @name Internal-Token
+// @name X-Internal-Token
 package main
 
 import (

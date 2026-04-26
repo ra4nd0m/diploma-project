@@ -31,6 +31,7 @@ type CohortService interface {
 	GetCohorts(ctx context.Context, userID uuid.UUID) ([]*models.Cohort, error)
 	GetCohortWithUsers(ctx context.Context, cohortID int64) (*models.CohortWithUsers, error)
 	AddsUserToCohortByInvite(ctx context.Context, cohortID int64, userID uuid.UUID) error
+	RemoveUserFromCohort(ctx context.Context, cohortID int64, userID uuid.UUID) error
 	GenerateInviteTokenToCohort(ctx context.Context, cohortID int64) (string, error)
 	IsCohortOwnedByUser(ctx context.Context, cohortID int64, userID uuid.UUID) (bool, error)
 	IsUserInCohorts(ctx context.Context, userID uuid.UUID, cohortIDs []int64) ([]int64, error)
@@ -227,6 +228,67 @@ func (h *CohortHandler) GetCohortMembers(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// RemoveUserFromCohort removes a user from a cohort.
+// @Summary Remove user from cohort
+// @Description Removes a user from a cohort. Allowed for the user themselves or the cohort owner.
+// @Tags cohorts
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Cohort ID"
+// @Param user_id path string true "User ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /cohorts/{id}/members/{user_id} [delete]
+func (h *CohortHandler) RemoveUserFromCohort(w http.ResponseWriter, r *http.Request) {
+	claims, ok := middleware.ClaimsFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	actorUserID, err := uuid.Parse(claims.Sub)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user id")
+		return
+	}
+
+	cohortID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid cohort id")
+		return
+	}
+
+	targetUserID, err := uuid.Parse(r.PathValue("user_id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid target user id")
+		return
+	}
+
+	canRemove := actorUserID == targetUserID
+	if !canRemove {
+		isOwner, err := h.cohortService.IsCohortOwnedByUser(r.Context(), cohortID, actorUserID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to check ownership")
+			return
+		}
+
+		if !isOwner {
+			writeError(w, http.StatusForbidden, "forbidden")
+			return
+		}
+	}
+
+	if err := h.cohortService.RemoveUserFromCohort(r.Context(), cohortID, targetUserID); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to remove user from cohort")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "removed"})
 }
 
 // JoinCohort joins the authenticated student to a cohort using an invite token.

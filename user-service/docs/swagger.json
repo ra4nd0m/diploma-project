@@ -619,7 +619,7 @@
         },
         "InternalToken": {
             "type": "apiKey",
-            "name": "Internal-Token",
+            "name": "X-Internal-Token",
             "in": "header"
         }
     }

@@ -51,6 +51,7 @@ func NewRouter(
 		protected.Get("/cohorts", cohortHandler.GetCohorts)
 		protected.Post("/cohorts", cohortHandler.CreateCohort)
 		protected.Get("/cohorts/{id}/members", cohortHandler.GetCohortMembers)
+		protected.Delete("/cohorts/{id}/members/{user_id}", cohortHandler.RemoveUserFromCohort)
 		protected.Post("/cohorts/join", cohortHandler.JoinCohort)
 		protected.Post("/cohorts/{id}/invite", cohortHandler.GenerateInviteToken)
 	})

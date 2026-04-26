@@ -320,7 +320,7 @@ const docTemplate = `{
                     {
                         "InternalToken": []
                     }
-                ],
+                            "name": "X-Internal-Token",
                 "description": "Checks whether the supplied user owns the supplied cohort.",
                 "consumes": [
                     "application/json"

@@ -412,6 +412,6 @@ securityDefinitions:
     type: apiKey
   InternalToken:
     in: header
-    name: Internal-Token
+    name: X-Internal-Token
     type: apiKey
 swagger: "2.0"
